@@ -31,8 +31,8 @@ public class Streaming extends UserStreamAdapter{
 			}
 		}
 		//TL反応
-		if(status.getText().startsWith("ももかちゃん") && status.getText().length() < 8 && !status.isRetweet()){
-			Momoka.Tweet("@" + status.getUser().getScreenName() + " はい！", status.getId());
+		if(status.getText().startsWith("ももかちゃん") && status.getText().length() < 8 && !status.isRetweet() && !status.getUser().getScreenName().equals(MyScreenName)){
+			Momoka.Tweet("@" + status.getUser().getScreenName() + " はいっ！", status.getId());
 		}
 		
 		if(status.getText().startsWith("@" + MyScreenName) && !status.isRetweet()){
