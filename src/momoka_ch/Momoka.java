@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,10 +48,12 @@ public class Momoka {
 	private static String[] NOT_LEARN_TEXT;
 	private static String[] NOT_LEARN_VIA;
 	private static List<String> learned;
+	private static ResultSet resultSet;
 	
 	private static Dialogue dialogue;
 	private static DialogueRequestParam dialogueParam;
 	private static List<String> dialogueContext;
+	private static List<String> dialogueContextUser;
 
 	private static Connection conn;
 	private static boolean debug = false;
@@ -73,7 +76,10 @@ public class Momoka {
 				"twittbot.net",
 				"Tweet Battery",
 				"autotweety.net",
-				"午前3時の茨城県"
+				"午前3時の茨城県",
+				"ニコニコ動画",
+				"Foursquare",
+				"リプライ数チェッカ"
 		};
 		InputStream is = Momoka.class.getResourceAsStream("properties");
         Properties prop = new Properties();
@@ -82,6 +88,7 @@ public class Momoka {
         
 		learned = new ArrayList<String>();
 		dialogueContext = new ArrayList<String>();
+		dialogueContextUser = new ArrayList<String>();
 		AuthApiKey.initializeAuth(prop.getProperty("docomoAPI"));
 		dialogue = new Dialogue();
 		dialogueParam = new DialogueRequestParam();
@@ -133,10 +140,11 @@ public class Momoka {
 		conn = DriverManager.getConnection("jdbc:sqlite:" + location);
 		stmt = conn.createStatement();
 		stmt.execute("create table if not exists momoka(content text, screen_name text, tweetId text, via text)");
-		ResultSet rs = stmt.executeQuery("select * from momoka");
-		while(rs.next()){
-			learned.add(rs.getString(1));
+		resultSet = stmt.executeQuery("select * from momoka");
+		while(resultSet.next()){
+			learned.add(resultSet.getString(1));
 		}
+		resultSet.close();
 	}
 	public static void Tweet(String TweetText, long ReplyTweetId){
 		try {
@@ -153,7 +161,7 @@ public class Momoka {
 	}
 	
 	
-	
+	//学習
 	public static void learn(Status status) throws TwitterException{
 		boolean NOT_LEARN_TEXT_BOOL = false;
 		boolean NOT_LEARN_VIA_BOOL = false;
@@ -194,7 +202,6 @@ public class Momoka {
 					if(!learn){
 						stmt.execute("insert into momoka values('" + tango
 								+ "', '" + status.getUser().getScreenName() + "', '" + status.getId() + "', '"
-										+ ""
 								+ status.getSource().replaceAll("<.+?>", "")
 								+"')");
 						learned.add(tango);
@@ -204,18 +211,19 @@ public class Momoka {
 				}
 			}
 			twitter.createFavorite(status.getId());
+			list.clear();
 		}
 	}
-	
+	//docomoAPIを使った会話
 	public static void dialogue(Status status){
 		String content = status.getText().substring(MyScreenName.length() + 2);
 		
 		String context = null;
 		DialogueResultData resultData = null;
 		
-		int userIndex = dialogueContext.indexOf(status.getUser().getScreenName());
+		int userIndex = dialogueContextUser.indexOf(status.getUser().getScreenName());
 		if(userIndex != -1)
-			context = dialogueContext.get(userIndex + 1).toString();
+			context = dialogueContext.get(userIndex).toString();
 		
 		dialogueParam.setUtt(content);
 		dialogueParam.setContext(context);
@@ -227,33 +235,33 @@ public class Momoka {
 		}
 		if(resultData != null){
 			if(userIndex != -1){
-				dialogueContext.set(userIndex + 1, resultData.getContext());
+				dialogueContext.set(userIndex, resultData.getContext());
 			}else{
-				dialogueContext.add(status.getUser().getScreenName());
+				dialogueContextUser.add(status.getUser().getScreenName());
 				dialogueContext.add(resultData.getContext());
 			}
 			Tweet("@" + status.getUser().getScreenName() + " " + resultData.getUtt(), status.getId());
 		}
 	}
-	
+	//乱数によってツイート
 	public static void randomTweet() throws SQLException{
-		ResultSet rs = stmt.executeQuery("select * from momoka where content like '[BEGIN]%'");
+		resultSet = stmt.executeQuery("select * from momoka where content like '[BEGIN]%'");
 		ArrayList<String> array = new ArrayList<String>();
 		String sentence;
-		while(rs.next())
-			array.add(rs.getString(1));
+		while(resultSet.next())
+			array.add(resultSet.getString(1));
 		String[] elements = string2StringArray(randomArray2String(array));
 		sentence = elements[1] + elements[2];
 		
-		ResultSet rs2 = null;
+		resultSet.close();
 		String[] tmp;
 		while(true){
 			array.clear();
 			if(elements[2].equals("[END]"))
 				break;
-			rs2 = stmt.executeQuery("select * from momoka where content like '" + elements[2] + "%'");
-			while(rs2.next())
-				array.add(rs2.getString(1));
+			resultSet = stmt.executeQuery("select * from momoka where content like '" + elements[2] + "%'");
+			while(resultSet.next())
+				array.add(resultSet.getString(1));
 			if(array.size() <= 1)
 				break;
 			tmp = string2StringArray(randomArray2String(array));
@@ -265,11 +273,93 @@ public class Momoka {
 		if(sentence.endsWith("[END]"))
 			sentence = sentence.replace("[END]", "");
 		Tweet(sentence, -1);
+		
+		resultSet.close();
 	}
 	public static String randomArray2String(ArrayList<String> array){
 		return array.get(random.nextInt(array.size() - 1));
 	}
 	public static String[] string2StringArray(String str){
 		return (String[])Arrays.asList(str.split(", ")).toArray();
+	}
+	
+	//学習要素数
+	public static void learnCount(Status status) throws SQLException{
+		String learnCountContent = "学習したすべてのツイートは" + learnTweets() + "個です。"
+				+ "すべての学習要素数は" + learnElements(null) + "個です。";
+		Tweet("@" + status.getUser().getScreenName() + " " + learnCountContent, status.getId());
+	}
+	//ユーザーによる学習要素数
+	public static void learnCountUser(Status status, String targetUser) throws SQLException{
+		long learnTweets = learnTweets();
+		long learnTweetsUser = learnTweetsUser(targetUser);
+		if(learnTweetsUser == 0){
+			Tweet("@" + status.getUser().getScreenName() + " データは存在しません。", status.getId());
+		}else{
+			NumberFormat nf = NumberFormat.getPercentInstance();
+			nf.setMaximumFractionDigits(5);
+			String ratio = nf.format((double)learnTweetsUser / (double)learnTweets);
+			
+			String learnCountUserContent = "@" + targetUser + "さんから学習したツイートは" + learnTweetsUser +
+					"個です。その中の学習要素数は" + learnElements(targetUser) + "個です。学習比率は全体の" + ratio + "です。";
+			Tweet("@" + status.getUser().getScreenName() + " " + learnCountUserContent, status.getId());
+		}
+	}
+	//要素数返却（ユーザーがnullの場合は全体の要素数を返却）
+	public static long learnElements(String user) throws SQLException{
+		long[] i = new long[4];
+		//only [BEGIN]%
+		if(user == null){
+			resultSet = stmt.executeQuery(
+					"select count(content) from momoka where content like '[BEGIN]%' and content not like '%[END]'");
+		}else{
+			resultSet = stmt.executeQuery(
+					"select count(content) from momoka where content like '[BEGIN]%' and content not like '%[END]' "
+					+ "and screen_name = '" + user + "'");
+		}
+		i[0] = Long.parseLong(resultSet.getString(1));
+		
+		//only %[END]
+		if(user == null){
+			resultSet = stmt.executeQuery(
+					"select count(content) from momoka where content like '%[END]' and content not like '[BEGIN]%'");
+		}else{
+			resultSet = stmt.executeQuery(
+					"select count(content) from momoka where content like '%[END]' and content not like '[BEGIN]%' "
+					+ "and screen_name = '" + user + "'");
+		}
+		i[1] = Long.parseLong(resultSet.getString(1));
+
+		//[BEGIN]%[END]
+		if(user == null){
+			resultSet = stmt.executeQuery("select count(content) from momoka where content like '[BEGIN]%[END]'");
+		}else{
+			resultSet = stmt.executeQuery("select count(content) from momoka where content like '[BEGIN]%[END]' "
+					+ "and screen_name = '" + user + "'");
+		}
+		i[2] = Long.parseLong(resultSet.getString(1));
+
+		//![BEGIN]% and !%[END]
+		if(user == null){
+			resultSet = stmt.executeQuery(
+					"select count(content) from momoka where content not like '[BEGIN]%' and content not like '%[END]'");
+		}else{
+			resultSet = stmt.executeQuery(
+					"select count(content) from momoka where content not like '[BEGIN]%' and content not like '%[END]' "
+					+ "and screen_name = '" + user + "'");
+		}
+		i[3] = Long.parseLong(resultSet.getString(1));
+		
+		return i[0]*2 + i[1]*2 + i[2] + i[3]*3;
+	}
+	//学習した総ツイート数
+	public static long learnTweets() throws SQLException{
+		resultSet = stmt.executeQuery("select count(distinct tweetId) from momoka");
+		return Long.parseLong(resultSet.getString(1));
+	}
+	//学習したユーザーの総ツイート数
+	public static long learnTweetsUser(String user) throws SQLException{
+		resultSet = stmt.executeQuery("select count(distinct tweetId) from momoka where screen_name = '" + user + "'");
+		return Long.parseLong(resultSet.getString(1));
 	}
 }
