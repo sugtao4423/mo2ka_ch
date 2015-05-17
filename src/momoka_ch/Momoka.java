@@ -255,7 +255,7 @@ public class Momoka {
 		
 		resultSet.close();
 		String[] tmp;
-		while(true){
+		for(int i = 0; i < 100; i++){
 			array.clear();
 			if(elements[2].equals("[END]"))
 				break;
@@ -288,6 +288,7 @@ public class Momoka {
 		String learnCountContent = "学習したすべてのツイートは" + learnTweets() + "個です。"
 				+ "すべての学習要素数は" + learnElements(null) + "個です。";
 		Tweet("@" + status.getUser().getScreenName() + " " + learnCountContent, status.getId());
+		resultSet.close();
 	}
 	//ユーザーによる学習要素数
 	public static void learnCountUser(Status status, String targetUser) throws SQLException{
@@ -304,53 +305,16 @@ public class Momoka {
 					"個です。その中の学習要素数は" + learnElements(targetUser) + "個です。学習比率は全体の" + ratio + "です。";
 			Tweet("@" + status.getUser().getScreenName() + " " + learnCountUserContent, status.getId());
 		}
+		resultSet.close();
 	}
 	//要素数返却（ユーザーがnullの場合は全体の要素数を返却）
 	public static long learnElements(String user) throws SQLException{
-		long[] i = new long[4];
-		//only [BEGIN]%
 		if(user == null){
-			resultSet = stmt.executeQuery(
-					"select count(content) from momoka where content like '[BEGIN]%' and content not like '%[END]'");
+			resultSet = stmt.executeQuery("select count(content) from momoka");
 		}else{
-			resultSet = stmt.executeQuery(
-					"select count(content) from momoka where content like '[BEGIN]%' and content not like '%[END]' "
-					+ "and screen_name = '" + user + "'");
+			resultSet = stmt.executeQuery("select count(content) from momoka where screen_name = '" + user + "'");
 		}
-		i[0] = Long.parseLong(resultSet.getString(1));
-		
-		//only %[END]
-		if(user == null){
-			resultSet = stmt.executeQuery(
-					"select count(content) from momoka where content like '%[END]' and content not like '[BEGIN]%'");
-		}else{
-			resultSet = stmt.executeQuery(
-					"select count(content) from momoka where content like '%[END]' and content not like '[BEGIN]%' "
-					+ "and screen_name = '" + user + "'");
-		}
-		i[1] = Long.parseLong(resultSet.getString(1));
-
-		//[BEGIN]%[END]
-		if(user == null){
-			resultSet = stmt.executeQuery("select count(content) from momoka where content like '[BEGIN]%[END]'");
-		}else{
-			resultSet = stmt.executeQuery("select count(content) from momoka where content like '[BEGIN]%[END]' "
-					+ "and screen_name = '" + user + "'");
-		}
-		i[2] = Long.parseLong(resultSet.getString(1));
-
-		//![BEGIN]% and !%[END]
-		if(user == null){
-			resultSet = stmt.executeQuery(
-					"select count(content) from momoka where content not like '[BEGIN]%' and content not like '%[END]'");
-		}else{
-			resultSet = stmt.executeQuery(
-					"select count(content) from momoka where content not like '[BEGIN]%' and content not like '%[END]' "
-					+ "and screen_name = '" + user + "'");
-		}
-		i[3] = Long.parseLong(resultSet.getString(1));
-		
-		return i[0]*2 + i[1]*2 + i[2] + i[3]*3;
+		return Long.parseLong(resultSet.getString(1));
 	}
 	//学習した総ツイート数
 	public static long learnTweets() throws SQLException{
