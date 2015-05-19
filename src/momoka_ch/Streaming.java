@@ -15,7 +15,7 @@ public class Streaming extends UserStreamAdapter{
 	@Override
 	public void onStatus(Status status){
 		//学習
-		if(random.nextInt(5) == 0){
+		if(random.nextInt(6) == 0 && !status.isRetweet() && !status.getUser().getScreenName().equals(MyScreenName)){
 			try {
 				Momoka.learn(status);
 			} catch (TwitterException e) {
@@ -31,10 +31,11 @@ public class Streaming extends UserStreamAdapter{
 			}
 		}
 		//TL反応
-		if(status.getText().startsWith("ももか") && status.getText().length() < 8 && !status.isRetweet() && !status.getUser().getScreenName().equals(MyScreenName)){
+		if(status.getText().startsWith("ももか") && status.getText().length() < 10 && !status.isRetweet() &&
+				!status.getUser().getScreenName().equals(MyScreenName)){
 			Momoka.Tweet("@" + status.getUser().getScreenName() + " はいっ！", status.getId());
 		}
-		
+		//学習カウント
 		if(status.getText().equals("@" + MyScreenName + " learn") && !status.isRetweet()){
 			try {
 				Momoka.learnCount(status);
@@ -52,6 +53,15 @@ public class Streaming extends UserStreamAdapter{
 		}
 		else if(status.getText().startsWith("@" + MyScreenName) && !status.isRetweet()){
 			Momoka.dialogue(status);
+		}
+		//飯
+		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") &&
+				!status.isRetweet() && !status.getUser().getScreenName().equals(MyScreenName)){
+			try {
+				Momoka.meshiTero(status);
+			} catch (TwitterException e) {
+				Momoka.Tweet(e.toString(), -1);
+			}
 		}
 	}
 }

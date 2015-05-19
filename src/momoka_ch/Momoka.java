@@ -25,6 +25,9 @@ import jp.ne.docomo.smt.dev.dialogue.Dialogue;
 import jp.ne.docomo.smt.dev.dialogue.data.DialogueResultData;
 import jp.ne.docomo.smt.dev.dialogue.param.DialogueRequestParam;
 import net.reduls.igo.Tagger;
+import twitter4j.MediaEntity;
+import twitter4j.Paging;
+import twitter4j.ResponseList;
 import twitter4j.Status;
 import twitter4j.StatusUpdate;
 import twitter4j.Twitter;
@@ -54,6 +57,8 @@ public class Momoka {
 	private static DialogueRequestParam dialogueParam;
 	private static List<String> dialogueContext;
 	private static List<String> dialogueContextUser;
+	
+	private static List<String> meshiText;
 
 	private static Connection conn;
 	private static boolean debug = false;
@@ -109,6 +114,17 @@ public class Momoka {
 		MyScreenName = twitter.getScreenName();
 		twitter.updateStatus("ももかちゃん起動 (" + new SimpleDateFormat("MM/dd HH:mm:ss").format(new Date()) + ")");
 		System.out.println(MyScreenName);
+		
+		meshiText = new ArrayList<String>();
+		ResponseList<Status> meshiResponse = twitter.getUserTimeline("meshiuma_yonaka", new Paging(1, 200));
+		for(Status status : meshiResponse){
+			MediaEntity[] mentitys = status.getMediaEntities();
+			if(mentitys != null && mentitys.length > 0 && !status.isRetweet()){
+	            for(int i = 0; i < mentitys.length; i++)
+	            	meshiText.add(status.getText());
+			}
+		}
+		meshiResponse.clear();
 		
 		random = new Random();
 		tagger = new Tagger("ipadic");
@@ -174,7 +190,7 @@ public class Momoka {
 				NOT_LEARN_VIA_BOOL = true;
 		}
 		
-		if(!status.isRetweet() && !NOT_LEARN_TEXT_BOOL && !NOT_LEARN_VIA_BOOL && !status.getUser().getScreenName().equals(MyScreenName)){
+		if(!NOT_LEARN_TEXT_BOOL && !NOT_LEARN_VIA_BOOL){
 			String content;
 			Matcher URL = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL)
 					.matcher(status.getText());
@@ -192,6 +208,7 @@ public class Momoka {
 			List<String> list = tagger.wakati(content);
 			list.add(0, "[BEGIN]");
 			list.add("[END]");
+			boolean reallyFav = false;
 			for(int i = 2; list.size() > i; i++){
 				boolean learn = false;
 				try {
@@ -205,12 +222,14 @@ public class Momoka {
 								+ status.getSource().replaceAll("<.+?>", "")
 								+"')");
 						learned.add(tango);
+						reallyFav = true;
 					}
 				} catch (SQLException e) {
 					Tweet(e.toString(), -1);
 				}
 			}
-			twitter.createFavorite(status.getId());
+			if(reallyFav)
+				twitter.createFavorite(status.getId());
 			list.clear();
 		}
 	}
@@ -255,7 +274,7 @@ public class Momoka {
 		
 		resultSet.close();
 		String[] tmp;
-		for(int i = 0; i < 100; i++){
+		for(int i = 0; i < 300; i++){
 			array.clear();
 			if(elements[2].equals("[END]"))
 				break;
@@ -273,7 +292,7 @@ public class Momoka {
 		if(sentence.endsWith("[END]"))
 			sentence = sentence.replace("[END]", "");
 		Tweet(sentence, -1);
-		
+		array.clear();
 		resultSet.close();
 	}
 	public static String randomArray2String(ArrayList<String> array){
@@ -325,5 +344,10 @@ public class Momoka {
 	public static long learnTweetsUser(String user) throws SQLException{
 		resultSet = stmt.executeQuery("select count(distinct tweetId) from momoka where screen_name = '" + user + "'");
 		return Long.parseLong(resultSet.getString(1));
+	}
+	
+	public static void meshiTero(Status status) throws TwitterException{
+		int meshiRandom = random.nextInt(meshiText.size() - 1);
+		Tweet("@" + status.getUser().getScreenName() + " " + meshiText.get(meshiRandom), status.getId());
 	}
 }
