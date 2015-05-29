@@ -203,7 +203,7 @@ public class Momoka {
 			if(mention.find()){
 				content = mention.replaceAll("");
 			}
-			content.replace("#", "");
+			content = content.replace("#", "");
 			
 			List<String> list = tagger.wakati(content);
 			list.add(0, "[BEGIN]");
