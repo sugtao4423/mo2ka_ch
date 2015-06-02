@@ -50,7 +50,7 @@ public class Momoka {
 	private static Tagger tagger;
 	private static String[] NOT_LEARN_TEXT;
 	private static String[] NOT_LEARN_VIA;
-	private static List<String> learned;
+	private static String[] NOT_FAVORITE_USER;
 	private static ResultSet resultSet;
 	
 	private static Dialogue dialogue;
@@ -86,12 +86,14 @@ public class Momoka {
 				"Foursquare",
 				"リプライ数チェッカ"
 		};
+		NOT_FAVORITE_USER = new String[]{
+				"nkpoid"
+		};
 		InputStream is = Momoka.class.getResourceAsStream("properties");
         Properties prop = new Properties();
         prop.load(is);
         is.close();
         
-		learned = new ArrayList<String>();
 		dialogueContext = new ArrayList<String>();
 		dialogueContextUser = new ArrayList<String>();
 		AuthApiKey.initializeAuth(prop.getProperty("docomoAPI"));
@@ -156,11 +158,6 @@ public class Momoka {
 		conn = DriverManager.getConnection("jdbc:sqlite:" + location);
 		stmt = conn.createStatement();
 		stmt.execute("create table if not exists momoka(content text, screen_name text, tweetId text, via text)");
-		resultSet = stmt.executeQuery("select * from momoka");
-		while(resultSet.next()){
-			learned.add(resultSet.getString(1));
-		}
-		resultSet.close();
 	}
 	public static void Tweet(String TweetText, long ReplyTweetId){
 		try {
@@ -192,17 +189,18 @@ public class Momoka {
 		
 		if(!NOT_LEARN_TEXT_BOOL && !NOT_LEARN_VIA_BOOL){
 			String content;
+			
 			Matcher URL = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL)
 					.matcher(status.getText());
-			if(URL.find()){
+			if(URL.find())
 				content = URL.replaceAll("");
-			}else{
+			else
 				content = status.getText();
-			}
+			
 			Matcher mention = Pattern.compile("@\\w*", Pattern.DOTALL).matcher(content);
-			if(mention.find()){
+			if(mention.find())
 				content = mention.replaceAll("");
-			}
+			
 			content = content.replace("#", "");
 			
 			List<String> list = tagger.wakati(content);
@@ -213,23 +211,29 @@ public class Momoka {
 				boolean learn = false;
 				try {
 					String tango = list.get(i - 2) + ", " + list.get(i - 1) + ", " + list.get(i);
-					if(learned.indexOf(tango) != -1)
-						learn = true;
+					
+					resultSet = stmt.executeQuery("select content from momoka where content = '" + tango + "'");
+					learn = resultSet.next();
 					
 					if(!learn){
 						stmt.execute("insert into momoka values('" + tango
 								+ "', '" + status.getUser().getScreenName() + "', '" + status.getId() + "', '"
 								+ status.getSource().replaceAll("<.+?>", "")
 								+"')");
-						learned.add(tango);
 						reallyFav = true;
 					}
 				} catch (SQLException e) {
 					Tweet(e.toString(), -1);
 				}
 			}
-			if(reallyFav)
-				twitter.createFavorite(status.getId());
+			if(reallyFav){
+				for(int i = 0; NOT_FAVORITE_USER.length > i; i++){
+					if(NOT_FAVORITE_USER[i].equals(status.getUser().getScreenName()))
+						reallyFav = false;
+				}
+				if(reallyFav)
+					twitter.createFavorite(status.getId());
+			}
 			list.clear();
 		}
 	}
