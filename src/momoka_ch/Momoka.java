@@ -7,6 +7,7 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -159,6 +160,7 @@ public class Momoka {
 		stmt = conn.createStatement();
 		stmt.execute("create table if not exists momoka(content text, screen_name text, tweetId text, via text)");
 	}
+	//ツイート
 	public static void Tweet(String TweetText, long ReplyTweetId){
 		try {
 			if(TweetText.length() > 140){
@@ -172,8 +174,7 @@ public class Momoka {
 			}
 		} catch (TwitterException e) {}
 	}
-	
-	
+
 	//学習
 	public static void learn(Status status) throws TwitterException{
 		boolean NOT_LEARN_TEXT_BOOL = false;
@@ -210,7 +211,9 @@ public class Momoka {
 			for(int i = 2; list.size() > i; i++){
 				boolean learn = false;
 				try {
-					String tango = list.get(i - 2) + ", " + list.get(i - 1) + ", " + list.get(i);
+					String tango = list.get(i - 2).replace("'", "''") + ", " +
+							list.get(i - 1).replace("'", "''") + ", " + 
+							list.get(i).replace("'", "''");
 					
 					resultSet = stmt.executeQuery("select content from momoka where content = '" + tango + "'");
 					learn = resultSet.next();
@@ -277,7 +280,7 @@ public class Momoka {
 		sentence = elements[1] + elements[2];
 		
 		resultSet.close();
-		String[] tmp;
+		ArrayList<String> selectedWords = new ArrayList<String>();
 		for(int i = 0; i < 300; i++){
 			array.clear();
 			if(elements[2].equals("[END]"))
@@ -287,7 +290,12 @@ public class Momoka {
 				array.add(resultSet.getString(1));
 			if(array.size() <= 1)
 				break;
-			tmp = string2StringArray(randomArray2String(array));
+			String randomString = randomArray2String(array);
+			if(selectedWords.indexOf(randomString) != -1)
+				selectedWords.add(randomString);
+			else
+				continue;
+			String[] tmp = string2StringArray(randomString);
 			if(elements[2].equalsIgnoreCase(tmp[0])){
 				elements = tmp;
 				sentence += elements[1] + elements[2];
@@ -297,6 +305,7 @@ public class Momoka {
 			sentence = sentence.replace("[END]", "");
 		Tweet(sentence, -1);
 		array.clear();
+		selectedWords.clear();
 		resultSet.close();
 	}
 	public static String randomArray2String(ArrayList<String> array){
@@ -349,9 +358,37 @@ public class Momoka {
 		resultSet = stmt.executeQuery("select count(distinct tweetId) from momoka where screen_name = '" + user + "'");
 		return Long.parseLong(resultSet.getString(1));
 	}
-	
+	//飯テロ
 	public static void meshiTero(Status status) throws TwitterException{
 		int meshiRandom = random.nextInt(meshiText.size() - 1);
 		Tweet("@" + status.getUser().getScreenName() + " " + meshiText.get(meshiRandom), status.getId());
+	}
+	//ping
+	public static void ping(Status status){
+		long tweetId2time = (status.getId() >> 22) + 1288834974657L;
+		long now = new Date().getTime();
+		Tweet("@" + status.getUser().getScreenName() + " " + String.valueOf((double)(tweetId2time - now) / 1000), status.getId());
+	}
+	//Memory
+	public static void Memory(Status status){
+		long free, total, max, used;
+		DecimalFormat f1, f2;
+		f1 = new DecimalFormat("#,###MB");
+		f2 = new DecimalFormat("##.#");
+		free = Runtime.getRuntime().freeMemory() / 1024 / 1024;
+		total = Runtime.getRuntime().totalMemory() / 1024 / 1024;
+		max = Runtime.getRuntime().maxMemory() /1024 / 1024;
+		used = total - free;
+		double per = (used * 100 / (double)total);
+		String message = "@" + status.getUser().getScreenName() + "\n合計：" + f1.format(total) + " \n使用量：" + f1.format(used) +
+				" (" + f2.format(per) + "%)" + "\n使用可能最大：" + f1.format(max);
+		Tweet(message, status.getId());
+	}
+	//wakati
+	public static void wakati(String content, String user, long tweetId){
+		List<String> list = tagger.wakati(content);
+		String result = list.toString().substring(1);
+		result = result.substring(0, result.length() - 1);
+		Tweet("@" + user + " " + result, tweetId);
 	}
 }

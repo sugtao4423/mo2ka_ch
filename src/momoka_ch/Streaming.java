@@ -51,7 +51,21 @@ public class Streaming extends UserStreamAdapter{
 				Momoka.Tweet(e.toString(), -1);
 			}
 		}
-		else if(status.getText().startsWith("@" + MyScreenName) && !status.isRetweet()){
+		//ping
+		else if(status.getText().equals("@" + MyScreenName + " ping") && !status.isRetweet()){
+			Momoka.ping(status);
+		}
+		//Memory
+		else if(status.getText().equals("@" + MyScreenName + " Memory") && !status.isRetweet()){
+			Momoka.Memory(status);
+		}
+		//wakati
+		else if(status.getText().startsWith("@" + MyScreenName + " wakati ") && !status.isRetweet() && admin(status)){
+			String content = status.getText().substring(MyScreenName.length() + 9);
+			Momoka.wakati(content, status.getUser().getScreenName(), status.getId());
+		}
+		//会話
+		else if(status.getText().startsWith("@" + MyScreenName) && !status.isRetweet() && !status.getUser().getScreenName().equals(MyScreenName)){
 			Momoka.dialogue(status);
 		}
 		//飯
@@ -63,5 +77,13 @@ public class Streaming extends UserStreamAdapter{
 				Momoka.Tweet(e.toString(), -1);
 			}
 		}
+	}
+	
+	public boolean admin(Status status){
+		if(!status.isRetweet()){
+			if(status.getUser().getScreenName().equals("sugtao4423") || status.getUser().getScreenName().equals("flum_"))
+				return true;
+		}
+		return false;
 	}
 }
