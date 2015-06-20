@@ -73,7 +73,9 @@ public class Momoka {
 				"#RakutenIchiba",
 				"#rbooks",
 				"#news",
-				"#anime"
+				"#anime",
+				"MinecraftServer",
+				"Namer"
 		};
 		NOT_LEARN_VIA = new String[]{
 				"たおっぱいのNamer",
