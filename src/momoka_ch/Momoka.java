@@ -273,7 +273,7 @@ public class Momoka {
 	}
 	//乱数によってツイート
 	public static void randomTweet() throws SQLException{
-		resultSet = stmt.executeQuery("select * from momoka where content like '[BEGIN]%'");
+		resultSet = stmt.executeQuery("select content from momoka where content like '[BEGIN]%'");
 		ArrayList<String> array = new ArrayList<String>();
 		String sentence;
 		while(resultSet.next())
@@ -281,19 +281,18 @@ public class Momoka {
 		String[] elements = string2StringArray(randomArray2String(array));
 		sentence = elements[1] + elements[2];
 		
-		resultSet.close();
 		ArrayList<String> selectedWords = new ArrayList<String>();
-		for(int i = 0; i < 300; i++){
+		for(int i = 0; i < 800; i++){
 			array.clear();
 			if(elements[2].equals("[END]"))
 				break;
-			resultSet = stmt.executeQuery("select * from momoka where content like '" + elements[2] + "%'");
+			resultSet = stmt.executeQuery("select content from momoka where content like '" + elements[2] + "%'");
 			while(resultSet.next())
 				array.add(resultSet.getString(1));
 			if(array.size() <= 1)
 				break;
 			String randomString = randomArray2String(array);
-			if(selectedWords.indexOf(randomString) != -1)
+			if(selectedWords.indexOf(randomString) == -1)
 				selectedWords.add(randomString);
 			else
 				continue;
@@ -303,8 +302,7 @@ public class Momoka {
 				sentence += elements[1] + elements[2];
 			}
 		}
-		if(sentence.endsWith("[END]"))
-			sentence = sentence.replace("[END]", "");
+		sentence = sentence.replace("[END]", "");
 		Tweet(sentence, -1);
 		array.clear();
 		selectedWords.clear();
