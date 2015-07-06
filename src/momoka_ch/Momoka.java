@@ -12,6 +12,7 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -43,6 +44,7 @@ import twitter4j.conf.ConfigurationBuilder;
 public class Momoka {
 	public static String MyScreenName;
 	public static Random random;
+	public static long startTime;
 	
 	private static Twitter twitter;
 	private static TwitterStream stream;
@@ -107,18 +109,17 @@ public class Momoka {
         String CS = prop.getProperty("CS");
         String AT = prop.getProperty("AT");
         String ATS = prop.getProperty("ATS");
-		ConfigurationBuilder builder = new ConfigurationBuilder();
-		builder.setOAuthConsumerKey(CK)
-		.setOAuthConsumerSecret(CS);
-		Configuration jconf = builder.build();
-		TwitterFactory factory = new TwitterFactory(jconf);
-		TwitterStreamFactory streamFactory = new TwitterStreamFactory(jconf);
+		Configuration jconf = new ConfigurationBuilder()
+		.setOAuthConsumerKey(CK)
+		.setOAuthConsumerSecret(CS).build();
 		AccessToken accessToken = new AccessToken(AT, ATS);
-		twitter = factory.getInstance(accessToken);
-		stream = streamFactory.getInstance(accessToken);
+		twitter = new TwitterFactory(jconf).getInstance(accessToken);
+		stream = new TwitterStreamFactory(jconf).getInstance(accessToken);
 		MyScreenName = twitter.getScreenName();
 		twitter.updateStatus("ももかちゃん起動 (" + new SimpleDateFormat("MM/dd HH:mm:ss").format(new Date()) + ")");
 		System.out.println(MyScreenName);
+		
+		startTime = new Date().getTime();
 		
 		meshiText = new ArrayList<String>();
 		ResponseList<Status> meshiResponse = twitter.getUserTimeline("meshiuma_yonaka", new Paging(1, 200));
@@ -390,5 +391,82 @@ public class Momoka {
 		String result = list.toString().substring(1);
 		result = result.substring(0, result.length() - 1);
 		Tweet("@" + user + " " + result, tweetId);
+	}
+	//info
+	public static void info(Status status, int ratio_learn, int ratio_tweet, int ratio_meshi){
+		//ほぼ全部連続稼働時間の計算
+		long milli = new Date().getTime() - startTime - Calendar.getInstance().getTimeZone().getRawOffset();
+		Date date = new Date();
+		date.setTime(milli);
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		String uptime = sdf.format(date);
+		Matcher m = Pattern.compile("(\\d{4})\\/(\\d{2})\\/(\\d{2})\\s(\\d{2}):(\\d{2}):(\\d{2})").matcher(uptime);
+		m.find();
+		int time[] = new int[6];
+		time[0] = Integer.parseInt(m.group(1)) - 1970;
+		time[1] = Integer.parseInt(m.group(2)) - 1;
+		time[2] = Integer.parseInt(m.group(3)) - 1;
+		time[3] = Integer.parseInt(m.group(4));
+		time[4] = Integer.parseInt(m.group(5));
+		time[5] = Integer.parseInt(m.group(6));
+
+		int days = 0;
+		//年
+		days += 365 * time[0];
+		//月
+		switch(time[1]){
+		case 0: case 1:
+			break;
+		case 2:
+			days += 31;
+			break;
+		case 3:
+			days += 31 + 28;
+			break;
+		case 4:
+			days += 31 + 28 + 31;
+			break;
+		case 5:
+			days += 31 + 28 + 31 + 30;
+			break;
+		case 6:
+			days += 31 + 28 + 31 + 30 + 31;
+			break;
+		case 7:
+			days += 31 + 28 + 31 + 30 + 31 + 30;
+			break;
+		case 8:
+			days += 31 + 28 + 31 + 30 + 31 + 30 + 31;
+			break;
+		case 9:
+			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31;
+			break;
+		case 10:
+			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30;
+			break;
+		case 11:
+			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31;
+			break;
+		case 12:
+			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30;
+			break;
+		}
+		//日にち（そのまま足す
+		days += time[2];
+		
+		String result = "";
+		if(days != 0)
+			result += days + "日";
+		if(time[3] != 0)
+			result += time[3] + "時間";
+		if(time[4] != 0)
+			result += time[4] + "分";
+		if(time[5] != 0)
+			result += time[5] + "秒";
+		
+		String message = "@" + status.getUser().getScreenName() + " 学習頻度は1/" + (ratio_learn + 1) + ", 呟く頻度は1/" +
+		(ratio_tweet + 1) + ", 飯テロ頻度は1/" + (ratio_meshi + 1) + "\n連続稼働時間は" + result + "です";
+		Tweet(message, status.getId());
 	}
 }
