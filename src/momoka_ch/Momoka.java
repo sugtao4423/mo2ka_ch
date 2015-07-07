@@ -12,11 +12,11 @@ import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -394,76 +394,22 @@ public class Momoka {
 	}
 	//info
 	public static void info(Status status, int ratio_learn, int ratio_tweet, int ratio_meshi){
-		//ほぼ全部連続稼働時間の計算
-		long milli = new Date().getTime() - startTime - Calendar.getInstance().getTimeZone().getRawOffset();
-		Date date = new Date();
-		date.setTime(milli);
+		long margin = (new Date().getTime() - startTime) / 1000;
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		String uptime = sdf.format(date);
-		Matcher m = Pattern.compile("(\\d{4})\\/(\\d{2})\\/(\\d{2})\\s(\\d{2}):(\\d{2}):(\\d{2})").matcher(uptime);
-		m.find();
-		int time[] = new int[6];
-		time[0] = Integer.parseInt(m.group(1)) - 1970;
-		time[1] = Integer.parseInt(m.group(2)) - 1;
-		time[2] = Integer.parseInt(m.group(3)) - 1;
-		time[3] = Integer.parseInt(m.group(4));
-		time[4] = Integer.parseInt(m.group(5));
-		time[5] = Integer.parseInt(m.group(6));
-
-		int days = 0;
-		//年
-		days += 365 * time[0];
-		//月
-		switch(time[1]){
-		case 0: case 1:
-			break;
-		case 2:
-			days += 31;
-			break;
-		case 3:
-			days += 31 + 28;
-			break;
-		case 4:
-			days += 31 + 28 + 31;
-			break;
-		case 5:
-			days += 31 + 28 + 31 + 30;
-			break;
-		case 6:
-			days += 31 + 28 + 31 + 30 + 31;
-			break;
-		case 7:
-			days += 31 + 28 + 31 + 30 + 31 + 30;
-			break;
-		case 8:
-			days += 31 + 28 + 31 + 30 + 31 + 30 + 31;
-			break;
-		case 9:
-			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31;
-			break;
-		case 10:
-			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30;
-			break;
-		case 11:
-			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31;
-			break;
-		case 12:
-			days += 31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30;
-			break;
-		}
-		//日にち（そのまま足す
-		days += time[2];
+		long day = TimeUnit.SECONDS.toDays(margin);
+		long hour = TimeUnit.SECONDS.toHours(margin - day * 86400L);
+		long minute = TimeUnit.SECONDS.toMinutes(margin - day * 86400L - hour * 3600L);
+		long second = TimeUnit.SECONDS.toSeconds(margin - day * 86400L - hour * 3600L - minute * 60L);
 		
 		String result = "";
-		if(days != 0)
-			result += days + "日";
-		if(time[3] != 0)
-			result += time[3] + "時間";
-		if(time[4] != 0)
-			result += time[4] + "分";
-		if(time[5] != 0)
-			result += time[5] + "秒";
+		if(day != 0L)
+			result += day + "日";
+		if(hour != 0L)
+			result += hour + "時間";
+		if(minute != 0L)
+			result += minute + "分";
+		if(second != 0L)
+			result += second + "秒";
 		
 		String message = "@" + status.getUser().getScreenName() + " 学習頻度は1/" + (ratio_learn + 1) + ", 呟く頻度は1/" +
 		(ratio_tweet + 1) + ", 飯テロ頻度は1/" + (ratio_meshi + 1) + "\n連続稼働時間は" + result + "です";
