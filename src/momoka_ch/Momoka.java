@@ -16,7 +16,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -44,7 +43,8 @@ import twitter4j.conf.ConfigurationBuilder;
 public class Momoka {
 	public static String MyScreenName;
 	public static Random random;
-	public static long startTime;
+	
+	private static long startTime;
 	
 	private static Twitter twitter;
 	private static TwitterStream stream;
@@ -394,12 +394,12 @@ public class Momoka {
 	}
 	//info
 	public static void info(Status status, int ratio_learn, int ratio_tweet, int ratio_meshi){
-		long margin = (new Date().getTime() - startTime) / 1000;
+		long time = (new Date().getTime() - startTime) / 1000;
 		
-		long day = TimeUnit.SECONDS.toDays(margin);
-		long hour = TimeUnit.SECONDS.toHours(margin - day * 86400L);
-		long minute = TimeUnit.SECONDS.toMinutes(margin - day * 86400L - hour * 3600L);
-		long second = TimeUnit.SECONDS.toSeconds(margin - day * 86400L - hour * 3600L - minute * 60L);
+		long day = time / 86400;
+		long hour = (time - day * 86400) / 3600;
+		long minute = (time - day * 86400 - hour * 3600) / 60;
+		long second = time - day * 86400 - hour * 3600 - minute * 60;
 		
 		String result = "";
 		if(day != 0L)

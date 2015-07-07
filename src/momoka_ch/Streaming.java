@@ -78,7 +78,7 @@ public class Streaming extends UserStreamAdapter{
 				Momoka.wakati(content, status.getUser().getScreenName(), status.getId());
 			}
 			//information
-			else if(status.getText().startsWith("@" + MyScreenName + " info") && admin(status)){
+			else if(status.getText().equals("@" + MyScreenName + " info") && admin(status)){
 				Momoka.info(status, ratio_learn, ratio_tweet, ratio_meshi);
 			}
 			//会話
@@ -89,10 +89,8 @@ public class Streaming extends UserStreamAdapter{
 	}
 	
 	public boolean admin(Status status){
-		if(!status.isRetweet()){
-			if(status.getUser().getScreenName().equals("sugtao4423") || status.getUser().getScreenName().equals("flum_"))
-				return true;
-		}
+		if(status.getUser().getScreenName().equals("sugtao4423") || status.getUser().getScreenName().equals("flum_"))
+			return true;
 		return false;
 	}
 }
