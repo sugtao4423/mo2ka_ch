@@ -81,6 +81,13 @@ public class Streaming extends UserStreamAdapter{
 			else if(status.getText().equals("@" + MyScreenName + " info") && admin(status)){
 				Momoka.info(status, ratio_learn, ratio_tweet, ratio_meshi);
 			}
+			else if(status.getText().equals("@" + MyScreenName + " newTweet")){
+				try {
+					Momoka.randomTweet();
+				} catch (SQLException e) {
+					Momoka.Tweet(e.toString(), -1);
+				}
+			}
 			//会話
 			else if(status.getText().startsWith("@" + MyScreenName) && !status.getUser().getScreenName().equals(MyScreenName)){
 				Momoka.dialogue(status);

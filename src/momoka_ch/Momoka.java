@@ -11,7 +11,6 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -49,6 +48,7 @@ public class Momoka {
 	private static Twitter twitter;
 	private static TwitterStream stream;
 	
+	private static Connection conn;
 	private static Statement stmt;
 	private static Tagger tagger;
 	private static String[] NOT_LEARN_TEXT;
@@ -62,8 +62,8 @@ public class Momoka {
 	private static List<String> dialogueContextUser;
 	
 	private static List<String> meshiText;
+	private static Pattern urlPattern, mentionPattern, learnPattern;
 
-	private static Connection conn;
 	private static boolean debug = false;
 	
 	public static void main(String[] args) throws Exception{
@@ -104,6 +104,10 @@ public class Momoka {
 		AuthApiKey.initializeAuth(prop.getProperty("docomoAPI"));
 		dialogue = new Dialogue();
 		dialogueParam = new DialogueRequestParam();
+		
+		urlPattern = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL);
+		mentionPattern = Pattern.compile("@\\w*", Pattern.DOTALL);
+		learnPattern = Pattern.compile("(.+),\\s(.+),\\s(.+)", Pattern.DOTALL);
 		
         String CK = prop.getProperty("CK");
         String CS = prop.getProperty("CS");
@@ -154,7 +158,7 @@ public class Momoka {
 		if(debug)
 			location = "/Users/tao/Desktop/database.db";
 		else
-			location = "/var/www/html/momoka/database.db";
+			location = "/var/www/html/products/momoka/database.db";
 		File DB = new File(location);
 		if(!DB.exists()){
 			DB.createNewFile();
@@ -194,14 +198,13 @@ public class Momoka {
 		if(!NOT_LEARN_TEXT_BOOL && !NOT_LEARN_VIA_BOOL){
 			String content;
 			
-			Matcher URL = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL)
-					.matcher(status.getText());
+			Matcher URL = urlPattern.matcher(status.getText());
 			if(URL.find())
 				content = URL.replaceAll("");
 			else
 				content = status.getText();
 			
-			Matcher mention = Pattern.compile("@\\w*", Pattern.DOTALL).matcher(content);
+			Matcher mention = mentionPattern.matcher(content);
 			if(mention.find())
 				content = mention.replaceAll("");
 			
@@ -313,7 +316,12 @@ public class Momoka {
 		return array.get(random.nextInt(array.size() - 1));
 	}
 	public static String[] string2StringArray(String str){
-		return (String[])Arrays.asList(str.split(", ")).toArray();
+		Matcher m = learnPattern.matcher(str);
+		if(m.find()){
+			return new String[]{m.group(1), m.group(2), m.group(3)};
+		}else{
+			return null;
+		}
 	}
 	
 	//学習要素数
