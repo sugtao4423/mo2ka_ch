@@ -11,9 +11,9 @@ public class Streaming extends UserStreamAdapter{
 	private Random random = Momoka.random;
 	private String MyScreenName = Momoka.MyScreenName;
 	
-	private int ratio_tweet = 9;
-	private int ratio_learn = 6;
-	private int ratio_meshi = 2;
+	private int ratio_tweet = 10;
+	private int ratio_learn = 7;
+	private int ratio_meshi = 3;
 	
 	@Override
 	public void onStatus(Status status){

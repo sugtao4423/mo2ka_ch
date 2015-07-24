@@ -173,7 +173,6 @@ public class Momoka {
 			if(TweetText.length() > 140){
 				TweetText = TweetText.substring(0, 140);
 			}
-			
 			if(ReplyTweetId == -1){
 				twitter.updateStatus(TweetText);
 			}else{
@@ -419,8 +418,8 @@ public class Momoka {
 		if(second != 0L)
 			result += second + "秒";
 		
-		String message = "@" + status.getUser().getScreenName() + " 学習頻度は1/" + (ratio_learn + 1) + ", 呟く頻度は1/" +
-		(ratio_tweet + 1) + ", 飯テロ頻度は1/" + (ratio_meshi + 1) + "\n連続稼働時間は" + result + "です";
+		String message = "@" + status.getUser().getScreenName() + " 学習頻度は1/" + ratio_learn + ", 呟く頻度は1/" +
+		ratio_tweet + ", 飯テロ頻度は1/" + ratio_meshi + "\n連続稼働時間は" + result + "です";
 		Tweet(message, status.getId());
 	}
 }
