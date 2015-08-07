@@ -11,6 +11,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -24,6 +25,7 @@ import jp.ne.docomo.smt.dev.common.http.AuthApiKey;
 import jp.ne.docomo.smt.dev.dialogue.Dialogue;
 import jp.ne.docomo.smt.dev.dialogue.data.DialogueResultData;
 import jp.ne.docomo.smt.dev.dialogue.param.DialogueRequestParam;
+import net.reduls.igo.Morpheme;
 import net.reduls.igo.Tagger;
 import twitter4j.MediaEntity;
 import twitter4j.Paging;
@@ -81,6 +83,7 @@ public class Momoka {
 		};
 		NOT_LEARN_VIA = new String[]{
 				"たおっぱいのNamer",
+				"osu! notification via tao",
 				"ツイ廃あらーと",
 				"TweetMag1c for Android",
 				"twittbot.net",
@@ -166,6 +169,7 @@ public class Momoka {
 		conn = DriverManager.getConnection("jdbc:sqlite:" + location);
 		stmt = conn.createStatement();
 		stmt.execute("create table if not exists momoka(content text, screen_name text, tweetId text, via text)");
+		stmt.execute("create table if not exists talk(t1 text, t2 text)");
 	}
 	//ツイート
 	public static void Tweet(String TweetText, long ReplyTweetId){
@@ -235,8 +239,8 @@ public class Momoka {
 				}
 			}
 			if(reallyFav){
-				for(int i = 0; NOT_FAVORITE_USER.length > i; i++){
-					if(NOT_FAVORITE_USER[i].equals(status.getUser().getScreenName()))
+				for(String noFavUser : NOT_FAVORITE_USER){
+					if(noFavUser.equals(status.getUser().getScreenName()))
 						reallyFav = false;
 				}
 				if(reallyFav)
@@ -263,17 +267,157 @@ public class Momoka {
 			resultData = dialogue.request(dialogueParam);
 		} catch (SdkException | ServerException e) {
 			Tweet("@" + status.getUser().getScreenName() + " " + e.getErrorMessage(), status.getId());
+			return;
 		}
-		if(resultData != null){
-			if(userIndex != -1){
-				dialogueContext.set(userIndex, resultData.getContext());
-			}else{
-				dialogueContextUser.add(status.getUser().getScreenName());
-				dialogueContext.add(resultData.getContext());
+		if(userIndex != -1){
+			dialogueContext.set(userIndex, resultData.getContext());
+		}else{
+			dialogueContextUser.add(status.getUser().getScreenName());
+			dialogueContext.add(resultData.getContext());
+		}
+		Tweet("@" + status.getUser().getScreenName() + " " + resultData.getUtt(), status.getId());
+		//会話を2段階で保存
+		ArrayList<String> receiveUtt = new ArrayList<String>();
+		ArrayList<String> sendUtt = new ArrayList<String>();
+		
+		List<Morpheme> receive = tagger.parse(content);
+		List<Morpheme> send = tagger.parse(resultData.getUtt());
+		boolean receive_noun = false, send_noun = false;
+		for(Morpheme m : receive){
+			if(m.feature.startsWith("名詞")){
+				receive_noun = true;
+				receiveUtt.add(m.surface);
 			}
-			Tweet("@" + status.getUser().getScreenName() + " " + resultData.getUtt(), status.getId());
+		}
+		for(Morpheme m : send){
+			if(m.feature.startsWith("名詞")){
+				send_noun = true;
+				sendUtt.add(m.surface);
+			}
+		}
+		if(!receive_noun){
+			int i = random.nextInt(receive.size());
+			receiveUtt.add(receive.get(i).surface);
+		}
+		if(!send_noun){
+			int i = random.nextInt(send.size());
+			sendUtt.add(send.get(i).surface);
+		}
+		String insertReceive = "";
+		String insertSend = "";
+		for(String s : receiveUtt)
+			insertReceive += s.replace("'", "''") + ",";
+		for(String s : sendUtt)
+			insertSend += s.replace("'", "''") + ",";
+		try {
+			resultSet = stmt.executeQuery("select * from talk where t1 = '" + insertReceive + "' and t2 = '" + insertSend + "'");
+			if(!resultSet.next())
+				stmt.execute("insert into talk values('" + insertReceive + "', '" + insertSend + "')");
+		} catch (SQLException e) {
+			Tweet(e.toString(), -1);
 		}
 	}
+	//会話を単語で学習してしゃべる
+	//今のところadmin、すなわち、@sugtao4423(←ノンケ) と @flum_(←ホモ)専用
+	public static void learnedTalk(Status status){
+		String content = status.getText().substring(MyScreenName.length() + 2);
+		List<Morpheme> contentWords = tagger.parse(content);
+		ArrayList<String> words = new ArrayList<String>();
+		boolean find_noun = false;
+		for(Morpheme m : contentWords){
+			if(m.feature.startsWith("名詞")){
+				find_noun = true;
+				words.add(m.surface);
+			}
+		}
+		String oneWord;
+		if(!find_noun){
+			int i = random.nextInt(contentWords.size());
+			oneWord = contentWords.get(i).surface;
+		}else{
+			int i = random.nextInt(words.size());
+			oneWord = words.get(i);
+		}
+		
+		try {
+			resultSet = stmt.executeQuery("select t2 from talk where t1 like '%" + oneWord + "%'");
+			if(!resultSet.next()){
+				dialogue(status);
+				return;
+			}
+			ArrayList<String> result = new ArrayList<String>();
+			String[] t2 = resultSet.getString(1).split(",", 0);
+			int index = random.nextInt(t2.length);
+			resultSet = stmt.executeQuery("select content from momoka where content like '%" + t2[index] + "'");
+			ArrayList<String> c_arr = new ArrayList<String>();
+			while(resultSet.next())
+				c_arr.add(resultSet.getString(1));
+			if(c_arr.isEmpty()){
+				dialogue(status);
+				return;				
+			}
+			String[] c = string2StringArray(randomArray2String(c_arr));
+			if(c[0].equals("[BEGIN]")){
+				result.add(c[2]);
+				result.add(c[1]);
+			}else{
+				result.add(c[2]);
+				result.add(c[1]);
+				result.add(c[0]);
+				for(int i = 0; i < 800; i++){
+					resultSet = stmt.executeQuery("select content from momoka where content like '%" + c[0] + "'");
+					c_arr.clear();
+					while(resultSet.next())
+						c_arr.add(resultSet.getString(1));
+					if(c_arr.isEmpty())
+						break;
+					c = string2StringArray(randomArray2String(c_arr));
+					if(c[0].equals("[BEGIN]")){
+						result.add(c[1]);
+						break;
+					}
+					result.add(c[1]);
+					result.add(c[0]);
+				}
+				Collections.reverse(result);
+				resultSet = stmt.executeQuery("select content from momoka where content like '" + t2[index] + "%'");
+				c_arr.clear();
+				while(resultSet.next())
+					c_arr.add(resultSet.getString(1));
+				if(!c_arr.isEmpty()){
+					c = string2StringArray(randomArray2String(c_arr));
+					if(c[2].equals("[END]")){
+						result.add(c[1]);
+					}else{
+						result.add(c[1]);
+						result.add(c[2]);
+						for(int i = 0; i < 800; i++){
+							resultSet = stmt.executeQuery("select content from momoka where content like '" + c[2] + "%'");
+							c_arr.clear();
+							while(resultSet.next())
+								c_arr.add(resultSet.getString(1));
+							if(c_arr.isEmpty())
+								break;
+							c = string2StringArray(randomArray2String(c_arr));
+							if(c[2].equals("[END]")){
+								result.add(c[1]);
+								break;
+							}
+							result.add(c[1]);
+							result.add(c[2]);
+						}
+					}
+				}
+			}
+			String tweet = "";
+			for(String s : result)
+				tweet += s;
+			Tweet("@" + status.getUser().getScreenName() + " " + tweet, status.getId());
+		} catch (SQLException e) {
+			Tweet(e.toString(), -1);
+		}
+	}
+	
 	//乱数によってツイート
 	public static void randomTweet() throws SQLException{
 		resultSet = stmt.executeQuery("select content from momoka where content like '[BEGIN]%'");
@@ -346,6 +490,20 @@ public class Momoka {
 			Tweet("@" + status.getUser().getScreenName() + " " + learnCountUserContent, status.getId());
 		}
 		resultSet.close();
+	}
+	//会話の学習個数
+	public static void learnTalkCount(Status status){
+		try {
+			resultSet = stmt.executeQuery("select count(*) from talk");
+			if(!resultSet.next()){
+				Tweet("@" + status.getUser().getScreenName() + " 学習した会話の単語セットは0個です", status.getId());
+			}else{
+				String s = resultSet.getString(1);
+				Tweet("@" + status.getUser().getScreenName() + " 学習した会話の単語セットは" + s + "個です", status.getId());
+			}
+		} catch (SQLException e) {
+			Tweet(e.toString(), -1);
+		}
 	}
 	//要素数返却（ユーザーがnullの場合は全体の要素数を返却）
 	public static long learnElements(String user) throws SQLException{

@@ -64,6 +64,9 @@ public class Streaming extends UserStreamAdapter{
 					Momoka.Tweet(e.toString(), -1);
 				}
 			}
+			else if(status.getText().equals("@" + MyScreenName + " learnTalk")){
+				Momoka.learnTalkCount(status);
+			}
 			//ping
 			else if(status.getText().equals("@" + MyScreenName + " ping")){
 				Momoka.ping(status);
@@ -81,7 +84,7 @@ public class Streaming extends UserStreamAdapter{
 			else if(status.getText().equals("@" + MyScreenName + " info") && admin(status)){
 				Momoka.info(status, ratio_learn, ratio_tweet, ratio_meshi);
 			}
-			else if(status.getText().equals("@" + MyScreenName + " newTweet")){
+			else if(status.getText().startsWith("@" + MyScreenName + " newTweet") && admin(status)){
 				try {
 					Momoka.randomTweet();
 				} catch (SQLException e) {
@@ -89,6 +92,10 @@ public class Streaming extends UserStreamAdapter{
 				}
 			}
 			//会話
+			else if(status.getText().startsWith("@" + MyScreenName) && !status.getUser().getScreenName().equals(MyScreenName)
+					&& admin(status)){
+				Momoka.learnedTalk(status);
+			}
 			else if(status.getText().startsWith("@" + MyScreenName) && !status.getUser().getScreenName().equals(MyScreenName)){
 				Momoka.dialogue(status);
 			}
