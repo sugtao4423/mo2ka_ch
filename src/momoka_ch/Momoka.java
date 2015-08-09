@@ -50,20 +50,15 @@ public class Momoka {
 	private static Twitter twitter;
 	private static TwitterStream stream;
 	
-	private static Connection conn;
-	private static Statement stmt;
+	private static Connection conn, wikiconn;
+	private static Statement stmt, wikistmt;
 	private static Tagger tagger;
-	private static String[] NOT_LEARN_TEXT;
-	private static String[] NOT_LEARN_VIA;
-	private static String[] NOT_FAVORITE_USER;
+	private static String[] NOT_LEARN_TEXT, NOT_LEARN_VIA, NOT_FAVORITE_USER;
 	private static ResultSet resultSet;
 	
 	private static Dialogue dialogue;
 	private static DialogueRequestParam dialogueParam;
-	private static List<String> dialogueContext;
-	private static List<String> dialogueContextUser;
-	
-	private static List<String> meshiText;
+	private static List<String> dialogueContext, dialogueContextUser, meshiText;
 	private static Pattern urlPattern, mentionPattern, learnPattern;
 
 	private static boolean debug = false;
@@ -109,7 +104,7 @@ public class Momoka {
 		dialogueParam = new DialogueRequestParam();
 		
 		urlPattern = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL);
-		mentionPattern = Pattern.compile("@\\w*", Pattern.DOTALL);
+		mentionPattern = Pattern.compile("@[0-9a-zA-Z_]+(\\s)?", Pattern.DOTALL);
 		learnPattern = Pattern.compile("(.+),\\s(.+),\\s(.+)", Pattern.DOTALL);
 		
         String CK = prop.getProperty("CK");
@@ -159,9 +154,9 @@ public class Momoka {
 		Class.forName("org.sqlite.JDBC");
 		String location;
 		if(debug)
-			location = "/Users/tao/Desktop/database.db";
+			location = "/Users/tao/Desktop/momoka.db";
 		else
-			location = "/var/www/html/products/momoka/database.db";
+			location = "/home/tao/data/momoka.db";
 		File DB = new File(location);
 		if(!DB.exists()){
 			DB.createNewFile();
@@ -170,6 +165,9 @@ public class Momoka {
 		stmt = conn.createStatement();
 		stmt.execute("create table if not exists momoka(content text, screen_name text, tweetId text, via text)");
 		stmt.execute("create table if not exists talk(t1 text, t2 text)");
+		
+		wikiconn = DriverManager.getConnection("jdbc:sqlite:/home/tao/data/wikiData.db");
+		wikistmt = wikiconn.createStatement();
 	}
 	//ツイート
 	public static void Tweet(String TweetText, long ReplyTweetId){
@@ -189,12 +187,12 @@ public class Momoka {
 	public static void learn(Status status) throws TwitterException{
 		boolean NOT_LEARN_TEXT_BOOL = false;
 		boolean NOT_LEARN_VIA_BOOL = false;
-		for(int i = 0; NOT_LEARN_TEXT.length > i; i++){
-			if(status.getText().matches(NOT_LEARN_TEXT[i]))
+		for(String s : NOT_LEARN_TEXT){
+			if(status.getText().matches(s))
 				NOT_LEARN_TEXT_BOOL = true;
 		}
-		for(int i = 0; NOT_LEARN_VIA.length > i; i++){
-			if(status.getSource().replaceAll("<.+?>", "").equals(NOT_LEARN_VIA[i]))
+		for(String s : NOT_LEARN_VIA){
+			if(status.getSource().replaceAll("<.+?>", "").equals(s))
 				NOT_LEARN_VIA_BOOL = true;
 		}
 		
@@ -217,19 +215,17 @@ public class Momoka {
 			list.add(0, "[BEGIN]");
 			list.add("[END]");
 			boolean reallyFav = false;
-			for(int i = 2; list.size() > i; i++){
-				boolean learn = false;
+			for(int i = 2; i < list.size(); i++){
 				try {
 					String tango = list.get(i - 2).replace("'", "''") + ", " +
 							list.get(i - 1).replace("'", "''") + ", " + 
 							list.get(i).replace("'", "''");
 					
 					resultSet = stmt.executeQuery("select content from momoka where content = '" + tango + "'");
-					learn = resultSet.next();
 					
-					if(!learn){
-						stmt.execute("insert into momoka values('" + tango
-								+ "', '" + status.getUser().getScreenName() + "', '" + status.getId() + "', '"
+					if(!resultSet.next()){
+						stmt.execute("insert into momoka values('" + tango + "', '"
+								+ status.getUser().getScreenName() + "', '" + status.getId() + "', '"
 								+ status.getSource().replaceAll("<.+?>", "")
 								+"')");
 						reallyFav = true;
@@ -456,7 +452,7 @@ public class Momoka {
 		resultSet.close();
 	}
 	public static String randomArray2String(ArrayList<String> array){
-		return array.get(random.nextInt(array.size() - 1));
+		return array.get(random.nextInt(array.size()));
 	}
 	public static String[] string2StringArray(String str){
 		Matcher m = learnPattern.matcher(str);
@@ -551,11 +547,12 @@ public class Momoka {
 		Tweet(message, status.getId());
 	}
 	//wakati
-	public static void wakati(String content, String user, long tweetId){
+	public static void wakati(Status status){
+		String content = status.getText().substring(MyScreenName.length() + 9);
 		List<String> list = tagger.wakati(content);
 		String result = list.toString().substring(1);
 		result = result.substring(0, result.length() - 1);
-		Tweet("@" + user + " " + result, tweetId);
+		Tweet("@" + status.getUser().getScreenName() + " " + result, status.getId());
 	}
 	//info
 	public static void info(Status status, int ratio_learn, int ratio_tweet, int ratio_meshi){
@@ -579,5 +576,52 @@ public class Momoka {
 		String message = "@" + status.getUser().getScreenName() + " 学習頻度は1/" + ratio_learn + ", 呟く頻度は1/" +
 		ratio_tweet + ", 飯テロ頻度は1/" + ratio_meshi + "\n連続稼働時間は" + result + "です";
 		Tweet(message, status.getId());
+	}
+	//○○って何？
+	public static void whatIs(Status status){
+		String what = status.getText().substring(MyScreenName.length() + 2, status.getText().length() - 4);
+		
+		try {
+			String tweet = "";
+			resultSet = wikistmt.executeQuery("select * from wiki where title = '" + what + "'");
+			if(resultSet.next()){
+				String description = resultSet.getString(2);
+				if(description.equals("")){
+					tweet = resultSet.getString(1) + " " + resultSet.getString(3);
+				}else{
+					int head = status.getUser().getScreenName().length() + 2;
+					String title = resultSet.getString(1);
+					String url = resultSet.getString(3);
+					
+					int descriptionSize = 140 - head - title.length() - 2 - 35;
+					if(description.length() > descriptionSize)
+						description = description.substring(0, descriptionSize - 3) + "...";
+					
+					tweet = title + "：" + description + " " + url;
+				}
+			}else{
+				resultSet = wikistmt.executeQuery("select title from wiki where description like '%" + what + "%'");
+				String[] arr = new String[5];
+				boolean isfind = false;
+				for(int i = 0; i < 5; i++){
+					if(resultSet.next()){
+						isfind = true;
+						arr[i] = resultSet.getString(1);
+					}else break;
+				}
+				if(isfind){
+					for(String s : arr){
+						if(s != null)
+							tweet += s + ", ";
+					}
+					tweet = "単語が見つかりませんでした。もしかして：" + tweet.substring(0, tweet.length() - 2);
+				}else{
+					tweet = "単語や、関連するような単語も見つかりませんでした";
+				}
+			}
+			twitter.updateStatus(new StatusUpdate("@" + status.getUser().getScreenName() + " " + tweet).inReplyToStatusId(status.getId()));
+		} catch (SQLException | TwitterException e) {
+			Tweet(e.toString(), -1);
+		}
 	}
 }

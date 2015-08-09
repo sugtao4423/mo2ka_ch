@@ -77,8 +77,7 @@ public class Streaming extends UserStreamAdapter{
 			}
 			//wakati
 			else if(status.getText().startsWith("@" + MyScreenName + " wakati ") && admin(status)){
-				String content = status.getText().substring(MyScreenName.length() + 9);
-				Momoka.wakati(content, status.getUser().getScreenName(), status.getId());
+				Momoka.wakati(status);
 			}
 			//information
 			else if(status.getText().equals("@" + MyScreenName + " info") && admin(status)){
@@ -90,6 +89,10 @@ public class Streaming extends UserStreamAdapter{
 				} catch (SQLException e) {
 					Momoka.Tweet(e.toString(), -1);
 				}
+			}
+			//○○って何？
+			else if(status.getText().startsWith("@" + MyScreenName) && status.getText().endsWith("って何？")){
+				Momoka.whatIs(status);
 			}
 			//会話
 			else if(status.getText().startsWith("@" + MyScreenName) && !status.getUser().getScreenName().equals(MyScreenName)
