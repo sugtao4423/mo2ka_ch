@@ -53,7 +53,7 @@ public class Momoka {
 	private static Connection conn, wikiconn;
 	private static Statement stmt, wikistmt;
 	private static Tagger tagger;
-	private static String[] NOT_LEARN_TEXT, NOT_LEARN_VIA, NOT_FAVORITE_USER;
+	private static String[] NOT_LEARN_TEXT, NOT_LEARN_VIA, NOT_FAVORITE_USER, REACTION_WORDS;
 	private static ResultSet resultSet;
 	
 	private static Dialogue dialogue;
@@ -91,6 +91,19 @@ public class Momoka {
 		};
 		NOT_FAVORITE_USER = new String[]{
 				"nkpoid"
+		};
+		REACTION_WORDS = new String[]{
+				"はいっ！",
+				"お呼びですかご主人さま？",
+				"え〜、やだ、なんですか〜？",
+				"なにかありましたぁ？",
+				"お呼びでしょうか？",
+				"あなたの元気な顔が見れて嬉しいです",
+				"わわっ、びっくりしました…",
+				"今、呼びました？",
+				"なにかご用ですか？",
+				"あ、あの、何か…？",
+				"ど、どうしました？"
 		};
 		InputStream is = Momoka.class.getResourceAsStream("properties");
         Properties prop = new Properties();
@@ -520,6 +533,12 @@ public class Momoka {
 		resultSet = stmt.executeQuery("select count(distinct tweetId) from momoka where screen_name = '" + user + "'");
 		return Long.parseLong(resultSet.getString(1));
 	}
+	//TL反応
+	public static void timeLineReaction(Status status){
+		int i = random.nextInt(REACTION_WORDS.length);
+		String tweet = "@" + status.getUser().getScreenName() + " " + REACTION_WORDS[i];
+		Tweet(tweet, status.getId());
+	}
 	//飯テロ
 	public static void meshiTero(Status status) throws TwitterException{
 		int meshiRandom = random.nextInt(meshiText.size() - 1);
@@ -593,11 +612,19 @@ public class Momoka {
 					String title = resultSet.getString(1);
 					String url = resultSet.getString(3);
 					
-					int descriptionSize = 140 - head - title.length() - 2 - 35;
+					int descriptionSize;
+					if(description.startsWith(title))
+						descriptionSize = 140 - head - 36;
+					else
+						descriptionSize = 140 - head - title.length() - 37;
+					
 					if(description.length() > descriptionSize)
 						description = description.substring(0, descriptionSize - 3) + "...";
 					
-					tweet = title + "：" + description + " " + url;
+					if(description.startsWith(title))
+						tweet = description + " " + url;
+					else
+						tweet = title + "：" + description + " " + url;
 				}
 			}else{
 				resultSet = wikistmt.executeQuery("select title from wiki where description like '%" + what + "%'");

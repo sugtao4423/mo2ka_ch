@@ -37,7 +37,7 @@ public class Streaming extends UserStreamAdapter{
 			//TL反応
 			if(status.getText().startsWith("ももか") && status.getText().length() < 10 &&
 					!status.getUser().getScreenName().equals(MyScreenName)){
-				Momoka.Tweet("@" + status.getUser().getScreenName() + " はいっ！", status.getId());
+				Momoka.timeLineReaction(status);
 			}
 			//飯
 			if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") &&
