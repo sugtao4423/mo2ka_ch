@@ -289,8 +289,29 @@ public class Momoka {
 		ArrayList<String> receiveUtt = new ArrayList<String>();
 		ArrayList<String> sendUtt = new ArrayList<String>();
 		
+		Matcher urlMatch = urlPattern.matcher(content);
+		if(urlMatch.find())
+			content = urlMatch.replaceAll("");
+		
+		Matcher mentionMatch = mentionPattern.matcher(content);
+		if(mentionMatch.find())
+			content = mentionMatch.replaceAll("");
+		
+		content = content.replace("#", "");
+		
+		String resultUtt = resultData.getUtt();
+		urlMatch = urlPattern.matcher(resultUtt);
+		if(urlMatch.find())
+			resultUtt = urlMatch.replaceAll("");
+		
+		mentionMatch = mentionPattern.matcher(resultUtt);
+		if(mentionMatch.find())
+			resultUtt = mentionMatch.replaceAll("");
+		
+		resultUtt = resultUtt.replace("#", "");
+		
 		List<Morpheme> receive = tagger.parse(content);
-		List<Morpheme> send = tagger.parse(resultData.getUtt());
+		List<Morpheme> send = tagger.parse(resultUtt);
 		boolean receive_noun = false, send_noun = false;
 		for(Morpheme m : receive){
 			if(m.feature.startsWith("名詞")){
