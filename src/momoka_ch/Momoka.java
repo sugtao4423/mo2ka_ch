@@ -116,7 +116,7 @@ public class Momoka {
 		dialogue = new Dialogue();
 		dialogueParam = new DialogueRequestParam();
 		
-		urlPattern = Pattern.compile("(http://|https://){1}[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL);
+		urlPattern = Pattern.compile("(\\s)?http(s)?://[\\w\\.\\-/:\\#\\?\\=\\&\\;\\%\\~\\+]+", Pattern.DOTALL);
 		mentionPattern = Pattern.compile("@[0-9a-zA-Z_]+(\\s)?", Pattern.DOTALL);
 		learnPattern = Pattern.compile("(.+),\\s(.+),\\s(.+)", Pattern.DOTALL);
 		
