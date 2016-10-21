@@ -44,7 +44,8 @@ import twitter4j.conf.ConfigurationBuilder;
 public class Momoka {
 	public static String MyScreenName;
 	public static Random random;
-	public static String SQLITE_RANDOM = " ORDER BY RANDOM() LIMIT 1";
+
+	private static String SQLITE_RANDOM = " ORDER BY RANDOM() LIMIT 1";
 	
 	private static long startTime;
 	
