@@ -176,8 +176,8 @@ public class Momoka {
 		}
 		conn = DriverManager.getConnection("jdbc:sqlite:" + location);
 		stmt = conn.createStatement();
-		stmt.execute("create table if not exists momoka(content text, screen_name text, tweetId text, via text)");
-		stmt.execute("create table if not exists talk(t1 text, t2 text)");
+		stmt.execute("create table if not exists momoka(content unique, screen_name, tweetId, via)");
+		stmt.execute("create table if not exists talk(t1, t2, unique(t1, t2))");
 		
 		wikiconn = DriverManager.getConnection("jdbc:sqlite:/home/tao/data/wikiData.db");
 		wikistmt = wikiconn.createStatement();
@@ -227,24 +227,22 @@ public class Momoka {
 			List<String> list = tagger.wakati(content);
 			list.add(0, "[BEGIN]");
 			list.add("[END]");
-			boolean reallyFav = false;
+			boolean reallyFav = true;
 			for(int i = 2; i < list.size(); i++){
 				try {
 					String tango = list.get(i - 2).replace("'", "''") + ", " +
 							list.get(i - 1).replace("'", "''") + ", " + 
 							list.get(i).replace("'", "''");
 					
-					resultSet = stmt.executeQuery("select content from momoka where content = '" + tango + "'");
-					
-					if(!resultSet.next()){
-						stmt.execute("insert into momoka values('" + tango + "', '"
-								+ status.getUser().getScreenName() + "', '" + status.getId() + "', '"
-								+ status.getSource().replaceAll("<.+?>", "")
-								+"')");
-						reallyFav = true;
-					}
+					stmt.execute("insert into momoka values('" + tango + "', '"
+							+ status.getUser().getScreenName() + "', '" + status.getId() + "', '"
+							+ status.getSource().replaceAll("<.+?>", "")
+							+"')");
 				} catch (SQLException e) {
-					Tweet(e.toString(), -1);
+					if(e.getErrorCode() == 19)
+						reallyFav = false;
+					else
+						Tweet(e.toString(), -1);
 				}
 			}
 			if(reallyFav){
@@ -339,12 +337,11 @@ public class Momoka {
 			insertReceive += s.replace("'", "''") + ",";
 		for(String s : sendUtt)
 			insertSend += s.replace("'", "''") + ",";
-		try {
-			resultSet = stmt.executeQuery("select * from talk where t1 = '" + insertReceive + "' and t2 = '" + insertSend + "'");
-			if(!resultSet.next())
-				stmt.execute("insert into talk values('" + insertReceive + "', '" + insertSend + "')");
+		try{
+			stmt.execute("insert into talk values('" + insertReceive + "', '" + insertSend + "')");
 		} catch (SQLException e) {
-			Tweet(e.toString(), -1);
+			if(e.getErrorCode() != 19)
+				Tweet(e.toString(), -1);
 		}
 	}
 	//会話を単語で学習してしゃべる
