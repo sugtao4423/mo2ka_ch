@@ -44,6 +44,7 @@ import twitter4j.conf.ConfigurationBuilder;
 public class Momoka {
 	public static String MyScreenName;
 	public static Random random;
+	public static String SQLITE_RANDOM = " ORDER BY RANDOM() LIMIT 1";
 	
 	private static long startTime;
 	
@@ -375,15 +376,12 @@ public class Momoka {
 			ArrayList<String> result = new ArrayList<String>();
 			String[] t2 = resultSet.getString(1).split(",", 0);
 			int index = random.nextInt(t2.length);
-			resultSet = stmt.executeQuery("select content from momoka where content like '%" + t2[index] + "'");
-			ArrayList<String> c_arr = new ArrayList<String>();
-			while(resultSet.next())
-				c_arr.add(resultSet.getString(1));
-			if(c_arr.isEmpty()){
+			resultSet = stmt.executeQuery("select content from momoka where content like '%" + t2[index] + "'" + SQLITE_RANDOM);
+			if(!resultSet.next()){
 				dialogue(status);
-				return;				
+				return;		
 			}
-			String[] c = string2StringArray(randomArray2String(c_arr));
+			String[] c = string2StringArray(resultSet.getString(1));
 			if(c[0].equals("[BEGIN]")){
 				result.add(c[2]);
 				result.add(c[1]);
@@ -392,13 +390,10 @@ public class Momoka {
 				result.add(c[1]);
 				result.add(c[0]);
 				for(int i = 0; i < 800; i++){
-					resultSet = stmt.executeQuery("select content from momoka where content like '%" + c[0] + "'");
-					c_arr.clear();
-					while(resultSet.next())
-						c_arr.add(resultSet.getString(1));
-					if(c_arr.isEmpty())
+					resultSet = stmt.executeQuery("select content from momoka where content like '%" + c[0] + "'" + SQLITE_RANDOM);
+					if(!resultSet.next())
 						break;
-					c = string2StringArray(randomArray2String(c_arr));
+					c = string2StringArray(resultSet.getString(1));
 					if(c[0].equals("[BEGIN]")){
 						result.add(c[1]);
 						break;
@@ -407,25 +402,19 @@ public class Momoka {
 					result.add(c[0]);
 				}
 				Collections.reverse(result);
-				resultSet = stmt.executeQuery("select content from momoka where content like '" + t2[index] + "%'");
-				c_arr.clear();
-				while(resultSet.next())
-					c_arr.add(resultSet.getString(1));
-				if(!c_arr.isEmpty()){
-					c = string2StringArray(randomArray2String(c_arr));
+				resultSet = stmt.executeQuery("select content from momoka where content like '" + t2[index] + "%'" + SQLITE_RANDOM);
+				if(!resultSet.next()){
+					c = string2StringArray(resultSet.getString(1));
 					if(c[2].equals("[END]")){
 						result.add(c[1]);
 					}else{
 						result.add(c[1]);
 						result.add(c[2]);
 						for(int i = 0; i < 800; i++){
-							resultSet = stmt.executeQuery("select content from momoka where content like '" + c[2] + "%'");
-							c_arr.clear();
-							while(resultSet.next())
-								c_arr.add(resultSet.getString(1));
-							if(c_arr.isEmpty())
+							resultSet = stmt.executeQuery("select content from momoka where content like '" + c[2] + "%'" + SQLITE_RANDOM);
+							if(!resultSet.next())
 								break;
-							c = string2StringArray(randomArray2String(c_arr));
+							c = string2StringArray(resultSet.getString(1));
 							if(c[2].equals("[END]")){
 								result.add(c[1]);
 								break;
@@ -447,25 +436,21 @@ public class Momoka {
 	
 	//乱数によってツイート
 	public static void randomTweet() throws SQLException{
-		resultSet = stmt.executeQuery("select content from momoka where content like '[BEGIN]%'");
-		ArrayList<String> array = new ArrayList<String>();
+		resultSet = stmt.executeQuery("select content from momoka where content like '[BEGIN]%'" + SQLITE_RANDOM);
 		String sentence;
-		while(resultSet.next())
-			array.add(resultSet.getString(1));
-		String[] elements = string2StringArray(randomArray2String(array));
+		if(!resultSet.next())
+			return;
+		String[] elements = string2StringArray(resultSet.getString(1));
 		sentence = elements[1] + elements[2];
 		
 		ArrayList<String> selectedWords = new ArrayList<String>();
 		for(int i = 0; i < 800; i++){
-			array.clear();
 			if(elements[2].equals("[END]"))
 				break;
-			resultSet = stmt.executeQuery("select content from momoka where content like '" + elements[2] + "%'");
-			while(resultSet.next())
-				array.add(resultSet.getString(1));
-			if(array.size() <= 1)
+			resultSet = stmt.executeQuery("select content from momoka where content like '" + elements[2] + "%'" + SQLITE_RANDOM);
+			if(!resultSet.next())
 				break;
-			String randomString = randomArray2String(array);
+			String randomString = resultSet.getString(1);
 			if(selectedWords.indexOf(randomString) == -1)
 				selectedWords.add(randomString);
 			else
@@ -478,13 +463,10 @@ public class Momoka {
 		}
 		sentence = sentence.replace("[END]", "");
 		Tweet(sentence, -1);
-		array.clear();
 		selectedWords.clear();
 		resultSet.close();
 	}
-	public static String randomArray2String(ArrayList<String> array){
-		return array.get(random.nextInt(array.size()));
-	}
+
 	public static String[] string2StringArray(String str){
 		Matcher m = learnPattern.matcher(str);
 		if(m.find()){
