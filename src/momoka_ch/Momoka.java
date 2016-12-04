@@ -1,7 +1,6 @@
 package momoka_ch;
 
 import java.io.File;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -14,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -107,14 +105,9 @@ public class Momoka{
 				"あ、あの、何か…？",
 				"ど、どうしました？"
 		};
-		InputStream is = Momoka.class.getResourceAsStream("properties");
-		Properties prop = new Properties();
-		prop.load(is);
-		is.close();
-
 		dialogueContext = new ArrayList<String>();
 		dialogueContextUser = new ArrayList<String>();
-		AuthApiKey.initializeAuth(prop.getProperty("docomoAPI"));
+		AuthApiKey.initializeAuth(Keys.docomoAPI);
 		dialogue = new Dialogue();
 		dialogueParam = new DialogueRequestParam();
 
@@ -122,12 +115,8 @@ public class Momoka{
 		mentionPattern = Pattern.compile("@[0-9a-zA-Z_]+(\\s)?", Pattern.DOTALL);
 		learnPattern = Pattern.compile("(.+),\\s(.+),\\s(.+)", Pattern.DOTALL);
 
-		String CK = prop.getProperty("CK");
-		String CS = prop.getProperty("CS");
-		String AT = prop.getProperty("AT");
-		String ATS = prop.getProperty("ATS");
-		Configuration jconf = new ConfigurationBuilder().setOAuthConsumerKey(CK).setOAuthConsumerSecret(CS).build();
-		AccessToken accessToken = new AccessToken(AT, ATS);
+		Configuration jconf = new ConfigurationBuilder().setOAuthConsumerKey(Keys.ck).setOAuthConsumerSecret(Keys.cs).build();
+		AccessToken accessToken = new AccessToken(Keys.at, Keys.ats);
 		twitter = new TwitterFactory(jconf).getInstance(accessToken);
 		stream = new TwitterStreamFactory(jconf).getInstance(accessToken);
 		MyScreenName = twitter.getScreenName();
