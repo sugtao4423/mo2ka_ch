@@ -63,11 +63,11 @@ public class Learn{
 
 		// TODO uncommentout, delline sysout
 //		try{
-//			if(fav)
+			if(fav)
+				System.out.println("learned from @" + status.getUser().getScreenName());
 //				Momoka.twitter.createFavorite(status.getId());
 //		}catch(TwitterException e){
 //		}
-		System.out.println("learned from @" + status.getUser().getScreenName());
 	}
 
 	private void talkLearn(Status status, String content){
