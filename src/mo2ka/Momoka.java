@@ -60,7 +60,9 @@ public class Momoka{
 		}
 
 		Configuration conf = new ConfigurationBuilder()
-				.setOAuthConsumerKey(Keys.consumerKey).setOAuthConsumerSecret(Keys.consumerSecret).build();
+				.setOAuthConsumerKey(Keys.consumerKey)
+				.setOAuthConsumerSecret(Keys.consumerSecret)
+				.setTweetModeExtended(true).build();
 		AccessToken at = new AccessToken(Keys.accessToken[0], Keys.accessToken[1]);
 		twitter = new TwitterFactory(conf).getInstance(at);
 

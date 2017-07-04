@@ -13,6 +13,7 @@ import mo2ka.Word;
 import net.reduls.igo.Morpheme;
 import twitter4j.ExtendedMediaEntity;
 import twitter4j.HashtagEntity;
+import twitter4j.MediaEntity;
 import twitter4j.Status;
 import twitter4j.TwitterException;
 import twitter4j.URLEntity;
@@ -96,9 +97,9 @@ public class Learn{
 			}
 		}
 
-		ExtendedMediaEntity[] mediaEntity = status.getExtendedMediaEntities();
+		MediaEntity[] mediaEntity = status.getMediaEntities();
 		if(mediaEntity != null && mediaEntity.length > 0){
-			for(ExtendedMediaEntity media : mediaEntity){
+			for(MediaEntity media : mediaEntity){
 				Pattern p = Pattern.compile(String.format("\\s*%s\\s*", media.getText()));
 				Matcher m = p.matcher(result);
 				if(m.find())
