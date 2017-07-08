@@ -7,8 +7,8 @@ Rewrote all source code from scratch.
 * igo 0.4.5
 * SQLite JDBC 3.15.1
 * Twitter4J
-    * core - 4.0.4
-    * stream - 4.0.4
+    * core - 4.0.6
+    * stream - 4.0.6
 
 # Using Dictionary
 * [mecab-ipadic-NEologd](https://github.com/neologd/mecab-ipadic-neologd)
