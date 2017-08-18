@@ -24,18 +24,21 @@ public class Streaming extends UserStreamAdapter{
 
 	@Override
 	public void onStatus(Status status){
+		// ランダムツイート
+		if(rnd.nextInt(ratio_tweet) == 0){
+			try{
+				String str = new CreateTweet().getResult();
+				new Tweet(str + "\nvia new mo2ka");
+			}catch(SQLException e){
+				System.err.println("Could not create tweet\nMessage: " + e.getMessage());
+			}
+		}
+
 		if(status.isRetweet() || status.getUser().getScreenName().equals(myScreenName))
 			return;
 
 		if(isLearnTarget(status))
 			new Learn(status);
-		if(status.getText().equals("@" + myScreenName + " new mo2ka tweet")){
-			try{
-				String str = new CreateTweet().getResult();
-				new Tweet(str + "\nvia new mo2ka");
-			}catch(SQLException e){
-			}
-		}
 	}
 
 	private boolean isLearnTarget(Status status){
