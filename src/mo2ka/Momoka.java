@@ -80,7 +80,7 @@ public class Momoka{
 		stream.addListener(new Streaming());
 		stream.user();
 
-		//new Tweet(String.format("ももかちゃん起動 (%s)", new SimpleDateFormat("MM/dd HH:mm:ss").format(new Date())));
+		new Tweet(String.format("ももかちゃん起動 (%s)", new SimpleDateFormat("MM/dd HH:mm:ss").format(new Date())));
 
 		Runtime.getRuntime().addShutdownHook(new Thread(){
 			public void run(){
