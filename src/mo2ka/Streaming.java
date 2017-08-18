@@ -11,6 +11,7 @@ import mo2ka.functions.MeshiTero;
 import mo2ka.functions.Ping;
 import mo2ka.functions.TimeLineReaction;
 import mo2ka.functions.Tweet;
+import mo2ka.functions.Wakati;
 import twitter4j.Status;
 import twitter4j.UserStreamAdapter;
 
@@ -73,6 +74,10 @@ public class Streaming extends UserStreamAdapter{
 		// memory
 		else if(status.getText().equals("@" + myScreenName + " memory")){
 			new Memory(status);
+		}
+		// wakati
+		else if(status.getText().startsWith("@" + myScreenName + " wakati ")){
+			new Wakati(status, myScreenName);
 		}
 	}
 
