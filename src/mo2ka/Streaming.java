@@ -5,6 +5,7 @@ import java.util.Random;
 
 import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Learn;
+import mo2ka.functions.MeshiTero;
 import mo2ka.functions.TimeLineReaction;
 import mo2ka.functions.Tweet;
 import twitter4j.Status;
@@ -47,6 +48,12 @@ public class Streaming extends UserStreamAdapter{
 		if(status.getText().startsWith("ももか") && status.getText().length() < 10
 				&& !status.getUser().getScreenName().equals(myScreenName)){
 			new TimeLineReaction(status);
+		}
+
+		// 飯テロ
+		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") && rnd.nextInt(ratio_meshi) == 0
+				&& !status.getUser().getScreenName().equals(myScreenName)){
+			new MeshiTero(status);
 		}
 	}
 

@@ -47,7 +47,7 @@ public class Momoka{
 
 	public static Twitter twitter;
 	public static Tagger tagger;
-	private static ArrayList<String> meshiTero;
+	public static ArrayList<String> meshiTero;
 
 	public static void main(String[] args){
 		startTime = System.currentTimeMillis();
