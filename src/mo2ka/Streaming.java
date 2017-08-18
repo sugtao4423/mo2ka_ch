@@ -5,6 +5,7 @@ import java.util.Random;
 
 import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Learn;
+import mo2ka.functions.TimeLineReaction;
 import mo2ka.functions.Tweet;
 import twitter4j.Status;
 import twitter4j.UserStreamAdapter;
@@ -34,11 +35,19 @@ public class Streaming extends UserStreamAdapter{
 			}
 		}
 
+		// これ以下 リツイート or 自分のツイートには反応しない
 		if(status.isRetweet() || status.getUser().getScreenName().equals(myScreenName))
 			return;
 
+		// 学習
 		if(isLearnTarget(status))
 			new Learn(status);
+
+		// TL反応
+		if(status.getText().startsWith("ももか") && status.getText().length() < 10
+				&& !status.getUser().getScreenName().equals(myScreenName)){
+			new TimeLineReaction(status);
+		}
 	}
 
 	private boolean isLearnTarget(Status status){
