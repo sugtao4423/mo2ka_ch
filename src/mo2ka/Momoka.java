@@ -104,10 +104,7 @@ public class Momoka{
 					break;
 				case "create-sentence":
 					try{
-						String str = null;
-						do
-							str = new CreateTweet().getResult();
-						while(str == null);
+						String str = new CreateTweet().getResult();
 						System.out.println(str);
 					}catch(SQLException e){
 						System.err.println("Could not create tweet\nMessage: " + e.getMessage());

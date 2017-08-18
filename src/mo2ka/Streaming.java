@@ -30,14 +30,11 @@ public class Streaming extends UserStreamAdapter{
 		if(isLearnTarget(status))
 			new Learn(status);
 		if(status.getText().equals("@" + myScreenName + " new mo2ka tweet")){
-			String str = null;
 			try{
-				do{
-					str = new CreateTweet().getResult();
-				}while(str == null);
+				String str = new CreateTweet().getResult();
+				new Tweet(str + "\nvia new mo2ka");
 			}catch(SQLException e){
 			}
-			new Tweet(str + "\nvia new mo2ka");
 		}
 	}
 

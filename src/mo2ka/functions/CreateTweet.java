@@ -10,6 +10,10 @@ public class CreateTweet{
 	private String result = null;
 
 	public CreateTweet() throws SQLException{
+		create();
+	}
+
+	private void create() throws SQLException{
 		ResultSet r = Momoka.stmt.executeQuery("select * from parts order by random() limit 1");
 		String[] partsList;
 		if(r.next()){
@@ -80,7 +84,9 @@ public class CreateTweet{
 
 	}
 
-	public String getResult(){
+	public String getResult() throws SQLException{
+		while(result == null)
+			create();
 		return result;
 	}
 
