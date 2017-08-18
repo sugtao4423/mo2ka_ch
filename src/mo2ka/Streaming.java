@@ -35,8 +35,7 @@ public class Streaming extends UserStreamAdapter{
 		// ランダムツイート
 		if(rnd.nextInt(ratio_tweet) == 0){
 			try{
-				String str = new CreateTweet().getResult();
-				new Tweet(str + "\nvia new mo2ka");
+				new Tweet(new CreateTweet().getResult());
 			}catch(SQLException e){
 				System.err.println("Could not create tweet\nMessage: " + e.getMessage());
 			}
