@@ -11,11 +11,9 @@ import mo2ka.DBUtils;
 import mo2ka.Momoka;
 import mo2ka.Word;
 import net.reduls.igo.Morpheme;
-import twitter4j.ExtendedMediaEntity;
 import twitter4j.HashtagEntity;
 import twitter4j.MediaEntity;
 import twitter4j.Status;
-import twitter4j.TwitterException;
 import twitter4j.URLEntity;
 import twitter4j.UserMentionEntity;
 
@@ -43,31 +41,21 @@ public class Learn{
 			return;
 		}
 
-		boolean fav = true;
+		boolean isLearned = true;
 		try{
 			DBUtils.insertPartsList(words, status);
 			DBUtils.insertMarkov(words, status);
 		}catch(SQLException e){
 			if(e.getErrorCode() == 19)
-				fav = false;
+				isLearned = false;
 			else
 				new Tweet(e.getMessage());
 		}catch(ParseException e){
 			return;
 		}
 
-		for(String s : Momoka.NOT_FAVORITE_USER){
-			if(s.equals(status.getUser().getScreenName()))
-				fav = false;
-		}
-
-		// TODO uncommentout, delline sysout
-//		try{
-			if(fav)
-				System.out.println("learned from @" + status.getUser().getScreenName());
-//				Momoka.twitter.createFavorite(status.getId());
-//		}catch(TwitterException e){
-//		}
+		if(isLearned)
+			System.out.println("learned from @" + status.getUser().getScreenName());
 	}
 
 	private void talkLearn(Status status, String content){

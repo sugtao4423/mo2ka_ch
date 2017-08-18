@@ -42,7 +42,7 @@ public class Momoka{
 	private static Connection conn, wikiConn;
 	public static Statement stmt, wikiStmt;
 
-	public static String[] NOT_LEARN_TEXT, LEARN_VIA, NOT_FAVORITE_USER, REACTION_WORDS;
+	public static String[] NOT_LEARN_TEXT, LEARN_VIA, REACTION_WORDS;
 
 	public static long startTime;
 
@@ -146,7 +146,6 @@ public class Momoka{
 	public static void loadSettings() throws SQLException{
 		NOT_LEARN_TEXT = DBUtils.getOneColumnResult(Tables.NOT_LEARN_TEXT);
 		LEARN_VIA = DBUtils.getOneColumnResult(Tables.LEARN_VIA);
-		NOT_FAVORITE_USER = DBUtils.getOneColumnResult(Tables.NOT_FAVORITE_USER);
 		REACTION_WORDS = DBUtils.getOneColumnResult(Tables.REACTION_WORD);
 	}
 

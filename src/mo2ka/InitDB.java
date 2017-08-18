@@ -21,7 +21,6 @@ public class InitDB{
 		Statement stmt = conn.createStatement();
 		stmt.execute(String.format("create table %s(nlText unique)", Tables.NOT_LEARN_TEXT));
 		stmt.execute(String.format("create table %s(lVia unique)", Tables.LEARN_VIA));
-		stmt.execute(String.format("create table %s(nfUser unique)", Tables.NOT_FAVORITE_USER));
 		stmt.execute(String.format("create table %s(rWord unique)", Tables.REACTION_WORD));
 
 		stmt.execute("create table parts(c, cp, screen_name, tweetId, via, unique(c, cp))");
@@ -33,8 +32,6 @@ public class InitDB{
 			stmt.execute(String.format(insertFormat, Tables.NOT_LEARN_TEXT, s));
 		for(String s : Default.LEARN_VIA)
 			stmt.execute(String.format(insertFormat, Tables.LEARN_VIA, s));
-		for(String s : Default.NOT_FAVORITE_USER)
-			stmt.execute(String.format(insertFormat, Tables.NOT_FAVORITE_USER, s));
 		for(String s : Default.REACTION_WORDS)
 			stmt.execute(String.format(insertFormat, Tables.REACTION_WORD, s));
 

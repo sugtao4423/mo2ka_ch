@@ -12,10 +12,6 @@ public class Default{
 			"iOS", "Tweetbot", "TheWorld"
 	};
 
-	public static final String[] NOT_FAVORITE_USER = new String[]{
-			"nkpoid"
-	};
-
 	public static final String[] REACTION_WORDS = new String[]{
 			"はいっ！", "お呼びですかご主人さま？", "え〜、やだ、なんですか〜？", "なにかありましたぁ？",
 			"お呼びでしょうか？", "あなたの元気な顔が見れて嬉しいです", "わわっ、びっくりしました…",
