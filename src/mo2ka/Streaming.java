@@ -5,6 +5,7 @@ import java.util.Random;
 
 import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Learn;
+import mo2ka.functions.LearnCount;
 import mo2ka.functions.MeshiTero;
 import mo2ka.functions.TimeLineReaction;
 import mo2ka.functions.Tweet;
@@ -54,6 +55,14 @@ public class Streaming extends UserStreamAdapter{
 		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") && rnd.nextInt(ratio_meshi) == 0
 				&& !status.getUser().getScreenName().equals(myScreenName)){
 			new MeshiTero(status);
+		}
+
+		// 学習カウント
+		if(status.getText().equals("@" + myScreenName + " learn")){
+			new LearnCount().learnCount(status);
+		}else if(status.getText().startsWith("@" + myScreenName + " learn from ")){
+			String learnedUser = status.getText().substring(myScreenName.length() + 13);
+			new LearnCount().learnCountFromUser(status, learnedUser);
 		}
 	}
 
