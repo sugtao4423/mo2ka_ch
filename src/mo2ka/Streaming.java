@@ -15,7 +15,6 @@ public class Streaming extends UserStreamAdapter{
 	private static String myScreenName;
 
 	private int ratio_tweet = 10;
-	private int ratio_learn = 2;
 	private int ratio_meshi = 3;
 
 	public Streaming(){
@@ -28,7 +27,6 @@ public class Streaming extends UserStreamAdapter{
 		if(status.isRetweet() || status.getUser().getScreenName().equals(myScreenName))
 			return;
 
-//		if(rnd.nextInt(ratio_learn) == 0 && isLearnTarget(status))
 		if(isLearnTarget(status))
 			new Learn(status);
 		if(status.getText().equals("@" + myScreenName + " new mo2ka tweet")){
