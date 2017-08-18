@@ -140,7 +140,7 @@ public class Momoka{
 		if(!new File(wikiLocation).exists())
 			throw new FileNotFoundException("Not found SQLite3 Wikipedia database");
 		wikiConn = JDBC.createConnection("jdbc:sqlite:" + wikiLocation, prop);
-		wikiStmt = conn.createStatement();
+		wikiStmt = wikiConn.createStatement();
 	}
 
 	public static void loadSettings() throws SQLException{
