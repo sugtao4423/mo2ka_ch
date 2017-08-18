@@ -7,6 +7,7 @@ import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Learn;
 import mo2ka.functions.LearnCount;
 import mo2ka.functions.MeshiTero;
+import mo2ka.functions.Ping;
 import mo2ka.functions.TimeLineReaction;
 import mo2ka.functions.Tweet;
 import twitter4j.Status;
@@ -63,6 +64,10 @@ public class Streaming extends UserStreamAdapter{
 		}else if(status.getText().startsWith("@" + myScreenName + " learn from ")){
 			String learnedUser = status.getText().substring(myScreenName.length() + 13);
 			new LearnCount().learnCountFromUser(status, learnedUser);
+		}
+		// ping
+		else if(status.getText().equals("@" + myScreenName + " ping")){
+			new Ping(status);
 		}
 	}
 
