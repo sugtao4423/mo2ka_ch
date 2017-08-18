@@ -6,6 +6,7 @@ import java.util.Random;
 import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Learn;
 import mo2ka.functions.LearnCount;
+import mo2ka.functions.Memory;
 import mo2ka.functions.MeshiTero;
 import mo2ka.functions.Ping;
 import mo2ka.functions.TimeLineReaction;
@@ -68,6 +69,10 @@ public class Streaming extends UserStreamAdapter{
 		// ping
 		else if(status.getText().equals("@" + myScreenName + " ping")){
 			new Ping(status);
+		}
+		// memory
+		else if(status.getText().equals("@" + myScreenName + " memory")){
+			new Memory(status);
 		}
 	}
 
