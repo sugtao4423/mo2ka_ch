@@ -35,11 +35,12 @@ import twitter4j.conf.ConfigurationBuilder;
 public class Momoka{
 
 	public static final String dbLocation = "/home/tao/mo2ka/momoka.db";
+	public static final String wikiLocation = "/home/tao/mo2ka/wiki.db";
 	public static final String igoDicDir = "/home/tao/mo2ka/neologd";
 	public static final String myScreenName = "mo2ka_ch";
 
-	private static Connection conn;
-	public static Statement stmt;
+	private static Connection conn, wikiConn;
+	public static Statement stmt, wikiStmt;
 
 	public static String[] NOT_LEARN_TEXT, LEARN_VIA, NOT_FAVORITE_USER, REACTION_WORDS;
 
@@ -87,6 +88,8 @@ public class Momoka{
 				try{
 					stmt.close();
 					conn.close();
+					wikiStmt.close();
+					wikiConn.close();
 				}catch(SQLException e){
 				}
 				System.out.println("mo2ka stopped");
@@ -133,6 +136,11 @@ public class Momoka{
 		prop.put("journal_mode", "wal");
 		conn = JDBC.createConnection("jdbc:sqlite:" + dbLocation, prop);
 		stmt = conn.createStatement();
+
+		if(!new File(wikiLocation).exists())
+			throw new FileNotFoundException("Not found SQLite3 Wikipedia database");
+		wikiConn = JDBC.createConnection("jdbc:sqlite:" + wikiLocation, prop);
+		wikiStmt = conn.createStatement();
 	}
 
 	public static void loadSettings() throws SQLException{

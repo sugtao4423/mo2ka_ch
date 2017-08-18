@@ -13,6 +13,7 @@ import mo2ka.functions.Ping;
 import mo2ka.functions.TimeLineReaction;
 import mo2ka.functions.Tweet;
 import mo2ka.functions.Wakati;
+import mo2ka.functions.WhatIs;
 import twitter4j.Status;
 import twitter4j.UserStreamAdapter;
 
@@ -83,6 +84,11 @@ public class Streaming extends UserStreamAdapter{
 		// info
 		else if(status.getText().equals("@" + myScreenName + " info")){
 			new Info(status, ratio_tweet, ratio_meshi);
+		}
+		// what is?
+		else if(status.getText().startsWith("@" + myScreenName) && status.getText().endsWith("って何？")){
+			String what = status.getText().substring(myScreenName.length() + 2, status.getText().length() - 4);
+			new WhatIs(status, what);
 		}
 	}
 
