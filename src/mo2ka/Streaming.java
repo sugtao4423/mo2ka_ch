@@ -4,6 +4,7 @@ import java.sql.SQLException;
 import java.util.Random;
 
 import mo2ka.functions.CreateTweet;
+import mo2ka.functions.Info;
 import mo2ka.functions.Learn;
 import mo2ka.functions.LearnCount;
 import mo2ka.functions.Memory;
@@ -78,6 +79,10 @@ public class Streaming extends UserStreamAdapter{
 		// wakati
 		else if(status.getText().startsWith("@" + myScreenName + " wakati ")){
 			new Wakati(status, myScreenName);
+		}
+		// info
+		else if(status.getText().equals("@" + myScreenName + " info")){
+			new Info(status, ratio_tweet, ratio_meshi);
 		}
 	}
 

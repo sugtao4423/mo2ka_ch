@@ -43,7 +43,7 @@ public class Momoka{
 
 	public static String[] NOT_LEARN_TEXT, LEARN_VIA, NOT_FAVORITE_USER, REACTION_WORDS;
 
-	private static long startTime;
+	public static long startTime;
 
 	public static Twitter twitter;
 	public static Tagger tagger;
