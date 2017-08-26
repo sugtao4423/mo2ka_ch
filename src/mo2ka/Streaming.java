@@ -2,6 +2,8 @@ package mo2ka;
 
 import java.sql.SQLException;
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Info;
@@ -11,6 +13,7 @@ import mo2ka.functions.Memory;
 import mo2ka.functions.MeshiTero;
 import mo2ka.functions.Ping;
 import mo2ka.functions.TimeLineReaction;
+import mo2ka.functions.Timer;
 import mo2ka.functions.Tweet;
 import mo2ka.functions.Wakati;
 import mo2ka.functions.WhatIs;
@@ -21,6 +24,8 @@ public class Streaming extends UserStreamAdapter{
 
 	private static Random rnd;
 	private static String myScreenName;
+	private Pattern preg_timer;
+	private Matcher m;
 
 	private int ratio_tweet = 10;
 	private int ratio_meshi = 3;
@@ -28,6 +33,7 @@ public class Streaming extends UserStreamAdapter{
 	public Streaming(){
 		rnd = new Random();
 		myScreenName = Momoka.myScreenName;
+		preg_timer = Pattern.compile("^@" + myScreenName + "\\sタイマー(\\d+)(秒|分|時間)");
 	}
 
 	@Override
@@ -88,6 +94,10 @@ public class Streaming extends UserStreamAdapter{
 		else if(status.getText().startsWith("@" + myScreenName) && status.getText().endsWith("って何？")){
 			String what = status.getText().substring(myScreenName.length() + 2, status.getText().length() - 4);
 			new WhatIs(status, what);
+		}
+		// timer
+		else if((m = preg_timer.matcher(status.getText())).find()){
+			new Timer(status, m.group(1), m.group(2));
 		}
 	}
 
