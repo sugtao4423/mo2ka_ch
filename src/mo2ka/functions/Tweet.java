@@ -24,4 +24,13 @@ public class Tweet{
 		}
 	}
 
+	public Tweet(String text, String url, long replyId){
+		if(text.length() > 117)
+			text = text.substring(0, 114) + "...";
+		try{
+			Momoka.twitter.updateStatus(new StatusUpdate(text + " " + url).inReplyToStatusId(replyId));
+		}catch(TwitterException e){
+		}
+	}
+
 }

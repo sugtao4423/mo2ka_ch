@@ -32,17 +32,14 @@ public class WhatIs{
 	}
 
 	private void tweet(Status status, String title, String abs){
-		int absMaxSize = 140 - status.getUser().getScreenName().length() - 38;
-		if(abs.length() > absMaxSize)
-			abs = abs.substring(0, absMaxSize - 3) + "...";
 		String url = "";
 		try{
 			if(title != null)
-				url = "https://ja.wikipedia.org/wiki/" + URLEncoder.encode(title, "UTF-8");
+				url = "https://ja.wikipedia.org/wiki/" + URLEncoder.encode(title, "UTF-8").replace("+", "%20");
 		}catch(UnsupportedEncodingException e){
 			System.err.println("Could not encode url\nMessage: " + e.getMessage());
 		}
-		new Tweet("@" + status.getUser().getScreenName() + " " + abs + " " + url, status.getId());
+		new Tweet("@" + status.getUser().getScreenName() + " " + abs, url, status.getId());
 	}
 
 }
