@@ -25,7 +25,7 @@ public class Info{
 		if(second != 0L)
 			result += second + "秒";
 
-		String tweet = "呟く頻度は1/" + Momoka.ratio_tweet + ", 飯テロ頻度は1/" + Momoka.ratio_meshi + "\n連続稼働時間は" + result + "です";
+		String tweet = "呟く頻度は1/" + Momoka.ratioTweet + ", 飯テロ頻度は1/" + Momoka.ratioMeshi + "\n連続稼働時間は" + result + "です";
 		new Tweet("@" + status.getUser().getScreenName() + " " + tweet, status.getId());
 	}
 

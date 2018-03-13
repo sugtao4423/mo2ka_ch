@@ -36,7 +36,7 @@ public class Streaming extends UserStreamAdapter{
 	@Override
 	public void onStatus(Status status){
 		// ランダムツイート
-		if(rnd.nextInt(Momoka.ratio_tweet) == 0){
+		if(rnd.nextInt(Momoka.ratioTweet) == 0){
 			try{
 				new Tweet(new CreateTweet().getResult());
 			}catch(SQLException e){
@@ -59,7 +59,7 @@ public class Streaming extends UserStreamAdapter{
 		}
 
 		// 飯テロ
-		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") && rnd.nextInt(Momoka.ratio_meshi) == 0
+		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") && rnd.nextInt(Momoka.ratioMeshi) == 0
 				&& !status.getUser().getScreenName().equals(myScreenName)){
 			new MeshiTero(status);
 		}
@@ -102,16 +102,16 @@ public class Streaming extends UserStreamAdapter{
 		boolean result = false;
 		if(status.getUserMentionEntities().length > 0)
 			return false;
-		for(String s : Momoka.NOT_LEARN_USER){
+		for(String s : Momoka.notLearnUser){
 			if(status.getUser().getScreenName().equals(s))
 				return false;
 		}
 		String via = status.getSource().replaceAll("<.+?>", "");
-		for(String s : Momoka.LEARN_VIA){
+		for(String s : Momoka.learnVia){
 			if(via.matches(".*" + s + ".*"))
 				result = true;
 		}
-		for(String s : Momoka.NOT_LEARN_TEXT){
+		for(String s : Momoka.notLearnText){
 			if(status.getText().matches(s))
 				result = false;
 		}

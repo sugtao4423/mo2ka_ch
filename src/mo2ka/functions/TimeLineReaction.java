@@ -8,8 +8,8 @@ import twitter4j.Status;
 public class TimeLineReaction{
 
 	public TimeLineReaction(Status status){
-		int i = new Random().nextInt(Momoka.REACTION_WORDS.length);
-		String tweet = "@" + status.getUser().getScreenName() + " " + Momoka.REACTION_WORDS[i];
+		int i = new Random().nextInt(Momoka.reactionWord.length);
+		String tweet = "@" + status.getUser().getScreenName() + " " + Momoka.reactionWord[i];
 		new Tweet(tweet, status.getId());
 	}
 
