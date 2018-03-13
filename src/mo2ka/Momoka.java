@@ -17,7 +17,6 @@ import java.util.Properties;
 
 import org.sqlite.JDBC;
 
-import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Tweet;
 import mo2ka.strings.Keys;
 import mo2ka.strings.JsonKeys;
@@ -113,36 +112,7 @@ public class Momoka{
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 		try{
 			for(String line = br.readLine(); line != null; line = br.readLine()){
-				switch(line){
-				case "stop":
-				case "exit":
-					System.exit(0);
-					break;
-				case "create-sentence":
-					try{
-						String str = new CreateTweet().getResult();
-						System.out.println(str);
-					}catch(SQLException e){
-						System.err.println("Could not create tweet\nMessage: " + e.getMessage());
-					}
-					break;
-				case "update-tagger":
-					try{
-						tagger = new Tagger(igoDicDir);
-						System.out.println("Update igo dic OK");
-					}catch(IOException e){
-						System.err.println("Could not create instance of Tagger\nMessage: " + e.getMessage());
-					}
-					break;
-				case "reload-config":
-					try{
-						loadSettings();
-						Thread.sleep(500);
-						System.out.println("Reload config OK");
-					}catch (IOException | JSONException | InterruptedException e) {
-						System.err.println("Could not reload configuration file\nMessage: " + e.getMessage());
-					}
-				}
+				new Cli(line);
 			}
 		}catch(IOException e){
 			System.err.println("Could not BufferedReader#readLine()\nMessage: " + e.getMessage());
