@@ -3,6 +3,8 @@ package mo2ka;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.sql.Connection;
@@ -18,8 +20,11 @@ import org.sqlite.JDBC;
 import mo2ka.functions.CreateTweet;
 import mo2ka.functions.Tweet;
 import mo2ka.strings.Keys;
-import mo2ka.strings.Tables;
+import mo2ka.strings.JsonKeys;
 import net.reduls.igo.Tagger;
+import twitter4j.JSONArray;
+import twitter4j.JSONException;
+import twitter4j.JSONObject;
 import twitter4j.MediaEntity;
 import twitter4j.Paging;
 import twitter4j.Status;
@@ -34,6 +39,7 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class Momoka{
 
+	public static final String confLocation = "/home/tao/mo2ka/mo2ka.conf.json";
 	public static final String dbLocation = "/home/tao/mo2ka/momoka.db";
 	public static final String wikiLocation = "/home/tao/mo2ka/wiki.db";
 	public static final String igoDicDir = "/home/tao/mo2ka/neologd";
@@ -42,7 +48,7 @@ public class Momoka{
 	private static Connection conn, wikiConn;
 	public static Statement stmt, wikiStmt;
 
-	public static String[] NOT_LEARN_TEXT, LEARN_VIA, REACTION_WORDS;
+	public static String[] NOT_LEARN_USER, NOT_LEARN_TEXT, LEARN_VIA, REACTION_WORDS;
 
 	public static long startTime;
 
@@ -54,9 +60,14 @@ public class Momoka{
 		startTime = System.currentTimeMillis();
 		try{
 			prepareSQLite();
-			loadSettings();
 		}catch(FileNotFoundException | SQLException e){
 			System.err.println("Failed Prepare SQLite\nMessage: " + e.getMessage());
+			System.exit(1);
+		}
+		try{
+			loadSettings();
+		}catch(IOException | JSONException e){
+			System.err.println("Failed Load Configuration file\nMessage: " + e.getMessage());
 			System.exit(1);
 		}
 
@@ -121,6 +132,14 @@ public class Momoka{
 						System.err.println("Could not create instance of Tagger\nMessage: " + e.getMessage());
 					}
 					break;
+				case "reload-config":
+					try{
+						loadSettings();
+						Thread.sleep(500);
+						System.out.println("Reload config OK");
+					}catch (IOException | JSONException | InterruptedException e) {
+						System.err.println("Could not reload configuration file\nMessage: " + e.getMessage());
+					}
 				}
 			}
 		}catch(IOException e){
@@ -143,10 +162,39 @@ public class Momoka{
 		wikiStmt = wikiConn.createStatement();
 	}
 
-	public static void loadSettings() throws SQLException{
-		NOT_LEARN_TEXT = DBUtils.getOneColumnResult(Tables.NOT_LEARN_TEXT);
-		LEARN_VIA = DBUtils.getOneColumnResult(Tables.LEARN_VIA);
-		REACTION_WORDS = DBUtils.getOneColumnResult(Tables.REACTION_WORD);
+	public static void loadSettings() throws IOException, JSONException{
+		File conf = new File(confLocation);
+		if(!conf.exists()){
+			conf.createNewFile();
+			FileWriter fw = new FileWriter(conf);
+			fw.write("{}");
+			fw.close();
+		}
+		BufferedReader br = new BufferedReader(new FileReader(conf));
+		StringBuilder sb = new StringBuilder();
+		String str;
+		while((str = br.readLine()) != null)
+			sb.append(str);
+		br.close();
+		str = sb.toString();
+		JSONObject jsonObj = new JSONObject(str);
+		JSONArray notLearnUser = jsonObj.has(JsonKeys.NOT_LEARN_USER) ? jsonObj.getJSONArray(JsonKeys.NOT_LEARN_USER) : null;
+		JSONArray notLearnText = jsonObj.has(JsonKeys.NOT_LEARN_TEXT) ? jsonObj.getJSONArray(JsonKeys.NOT_LEARN_TEXT) : null;
+		JSONArray learnVia = jsonObj.has(JsonKeys.LEARN_VIA) ? jsonObj.getJSONArray(JsonKeys.LEARN_VIA) : null;
+		JSONArray reactionWord = jsonObj.has(JsonKeys.REACTION_WORD) ? jsonObj.getJSONArray(JsonKeys.REACTION_WORD) : null;
+		NOT_LEARN_USER = getArrayFromJSONArray(notLearnUser);
+		NOT_LEARN_TEXT = getArrayFromJSONArray(notLearnText);
+		LEARN_VIA = getArrayFromJSONArray(learnVia);
+		REACTION_WORDS = getArrayFromJSONArray(reactionWord);
+	}
+
+	public static String[] getArrayFromJSONArray(JSONArray arr) throws JSONException{
+		if(arr == null)
+			return new String[0];
+		String[] result = new String[arr.length()];
+		for(int i = 0; i < result.length; i++)
+			result[i] = arr.getString(i);
+		return result;
 	}
 
 	public static void loadMeshiTeroBot(){

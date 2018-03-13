@@ -5,7 +5,7 @@ Rewrote all source code from scratch.
 
 # Using libraries
 * igo 0.4.5
-* SQLite JDBC 3.15.1
+* SQLite JDBC 3.21.0
 * Twitter4J
     * core - 4.0.6
     * stream - 4.0.6

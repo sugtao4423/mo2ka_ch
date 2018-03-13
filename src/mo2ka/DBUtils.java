@@ -1,6 +1,5 @@
 package mo2ka;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -8,15 +7,6 @@ import java.util.ArrayList;
 import twitter4j.Status;
 
 public class DBUtils{
-
-	public static String[] getOneColumnResult(String tableName) throws SQLException{
-		ResultSet rs = Momoka.stmt.executeQuery("select * from " + tableName);
-		ArrayList<String> array = new ArrayList<String>();
-		while(rs.next())
-			array.add(rs.getString(1));
-		rs.close();
-		return array.toArray(new String[array.size()]);
-	}
 
 	public static void insertPartsList(Word[] words, Status status) throws SQLException{
 		String contents = "";

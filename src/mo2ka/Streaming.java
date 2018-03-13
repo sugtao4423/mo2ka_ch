@@ -105,6 +105,10 @@ public class Streaming extends UserStreamAdapter{
 		boolean result = false;
 		if(status.getUserMentionEntities().length > 0)
 			return false;
+		for(String s : Momoka.NOT_LEARN_USER){
+			if(status.getUser().getScreenName().equals(s))
+				return false;
+		}
 		String via = status.getSource().replaceAll("<.+?>", "");
 		for(String s : Momoka.LEARN_VIA){
 			if(via.matches(".*" + s + ".*"))
