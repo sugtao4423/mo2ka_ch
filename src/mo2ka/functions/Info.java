@@ -7,7 +7,7 @@ import twitter4j.Status;
 
 public class Info{
 
-	public Info(Status status, int ratio_tweet, int ratio_meshi){
+	public Info(Status status){
 		long time = (new Date().getTime() - Momoka.startTime) / 1000;
 
 		long day = time / 86400;
@@ -25,7 +25,7 @@ public class Info{
 		if(second != 0L)
 			result += second + "秒";
 
-		String tweet = "呟く頻度は1/" + ratio_tweet + ", 飯テロ頻度は1/" + ratio_meshi + "\n連続稼働時間は" + result + "です";
+		String tweet = "呟く頻度は1/" + Momoka.ratio_tweet + ", 飯テロ頻度は1/" + Momoka.ratio_meshi + "\n連続稼働時間は" + result + "です";
 		new Tweet("@" + status.getUser().getScreenName() + " " + tweet, status.getId());
 	}
 

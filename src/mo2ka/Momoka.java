@@ -49,6 +49,8 @@ public class Momoka{
 	public static Statement stmt, wikiStmt;
 
 	public static String[] NOT_LEARN_USER, NOT_LEARN_TEXT, LEARN_VIA, REACTION_WORDS;
+	public static int ratio_tweet;
+	public static int ratio_meshi;
 
 	public static long startTime;
 
@@ -178,6 +180,8 @@ public class Momoka{
 		br.close();
 		str = sb.toString();
 		JSONObject jsonObj = new JSONObject(str);
+		ratio_tweet = jsonObj.has(JsonKeys.RATIO_TWEET) ? jsonObj.getInt(JsonKeys.RATIO_TWEET) : 10;
+		ratio_meshi = jsonObj.has(JsonKeys.RATIO_MESHI) ? jsonObj.getInt(JsonKeys.RATIO_MESHI) : 3;
 		JSONArray notLearnUser = jsonObj.has(JsonKeys.NOT_LEARN_USER) ? jsonObj.getJSONArray(JsonKeys.NOT_LEARN_USER) : null;
 		JSONArray notLearnText = jsonObj.has(JsonKeys.NOT_LEARN_TEXT) ? jsonObj.getJSONArray(JsonKeys.NOT_LEARN_TEXT) : null;
 		JSONArray learnVia = jsonObj.has(JsonKeys.LEARN_VIA) ? jsonObj.getJSONArray(JsonKeys.LEARN_VIA) : null;

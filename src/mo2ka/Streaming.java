@@ -27,9 +27,6 @@ public class Streaming extends UserStreamAdapter{
 	private Pattern preg_timer;
 	private Matcher m;
 
-	private int ratio_tweet = 10;
-	private int ratio_meshi = 3;
-
 	public Streaming(){
 		rnd = new Random();
 		myScreenName = Momoka.myScreenName;
@@ -39,7 +36,7 @@ public class Streaming extends UserStreamAdapter{
 	@Override
 	public void onStatus(Status status){
 		// ランダムツイート
-		if(rnd.nextInt(ratio_tweet) == 0){
+		if(rnd.nextInt(Momoka.ratio_tweet) == 0){
 			try{
 				new Tweet(new CreateTweet().getResult());
 			}catch(SQLException e){
@@ -62,7 +59,7 @@ public class Streaming extends UserStreamAdapter{
 		}
 
 		// 飯テロ
-		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") && rnd.nextInt(ratio_meshi) == 0
+		if(status.getText().matches(".*((おなか|お腹)(すいた|空いた)|空腹|腹減|はらへ).*") && rnd.nextInt(Momoka.ratio_meshi) == 0
 				&& !status.getUser().getScreenName().equals(myScreenName)){
 			new MeshiTero(status);
 		}
@@ -88,7 +85,7 @@ public class Streaming extends UserStreamAdapter{
 		}
 		// info
 		else if(status.getText().equals("@" + myScreenName + " info")){
-			new Info(status, ratio_tweet, ratio_meshi);
+			new Info(status);
 		}
 		// what is?
 		else if(status.getText().startsWith("@" + myScreenName) && status.getText().endsWith("って何？")){
